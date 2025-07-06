@@ -1,0 +1,469 @@
+body, html {
+  margin: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+}
+
+#map {
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  z-index: 1;
+}
+
+/* SPINNER MODERNE */
+#spinner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loader {
+  border: 6px solid #f3f3f3;
+  border-top: 6px solid #007bff;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 0.8s linear infinite;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+/* LES PARAMETRES DE LA BARRE DE HAUT */
+
+/* Ajustement du bouton de zoom au niveau voulu */
+.leaflet-control-zoom {
+  top: 130px; 
+}
+
+/* Parametre de la barre de haut */
+.topbar {
+  position: absolute;
+  top: 10px;
+  left: 45px;
+  width: 90%;
+  height: 50px;
+  background: white;
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Parametre du texte de la barre de haut */
+.topbar .name {
+  font-weight: bold;
+  font-size: 20px;
+}
+
+/* Parametre du boutton contact en haut a droite sur la barre de haut */
+.Contact {
+  background: linear-gradient(45deg, #237bdf, #2fe6ec);
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+/* LES STYLES DE LA BARRE DE GAUCHE */
+
+/*Configuration du sidebar ou barre de gauche*/
+.toggle-sidebar {
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  z-index: 1001;
+  background: rgba(0, 123, 255, 0.80);
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Affichage de la barre de gauche */
+.sidebar.hidden {
+  display: none;
+}
+
+/* Toute la barre de gauche */
+.sidebar {
+  position: absolute;
+  top: 80px;
+  left: 20px;
+  background: rgba(254, 255, 255, 0.3);
+  padding: 20px;
+  width: 100px;
+  border-radius: 10px;
+  z-index: 999;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  font-size: 14px;
+}
+
+/* Formatage des titres du 3eme niveau */
+.sidebar h3 {
+  margin-top: 15px;
+  margin-bottom: 5px;
+}
+
+#categorie{
+  padding: 6px; 
+  border-radius: 6px; 
+  border: 1px solid #ccc; 
+  width: 100%; 
+  max-width: 300px;
+}
+
+/* Bare de recherche */
+#search{
+  padding: 8px; 
+  border: 1px solid #ccc; 
+  border-radius: 6px;
+  width: 93%; 
+  max-width: 300px; 
+  margin-top: 1px;
+}
+
+.search-container {
+  position: relative;
+  width: 95%;
+}
+
+.search-container input[type="text"] {
+  width: 100%;
+  padding: 8px 32px 8px 12px; /* espace pour l’icône à droite */
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.search-container .search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none; /* empêche le clic sur l’icône */
+  font-size: 10px;
+  color: #667;
+}
+
+/* Style de la liste des resultats prealables */
+.search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 150px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #ccc;
+  position: relative;
+  z-index: 1000;
+}
+
+.search-results li {
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.search-results li:hover {
+  background-color: #f0f0f0;
+}
+
+/* Style du boutton de reinitialisation des filtres */
+.reset-button {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.reset-button:hover {
+  background-color: #d32f2f;
+}
+
+
+
+/* LES STYLES DE LA BARRE DE DROITE */
+/* Configuration de la barre de droite */
+.right-tools {
+  position: absolute;
+  top: 70px;
+  right: 0;
+  width: 30px;
+  border-left: none; /* on enlève la bordure */
+  box-shadow: none; /* on enlève les ombres */
+  z-index: 999;
+  padding: 10px;
+  border-radius: 8px 0 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* Configuration generale des boutons de droite */
+.right-tools button {
+  background: white;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.right-tools button:hover {
+  background: #e0e0e0;
+}
+
+.right-tools > div {
+  margin-bottom: 10px;
+}
+
+
+/* Comment le contenu de droite doit s'afficher */
+.right-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* ZOOM */
+.zoom-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px; /* plus de séparation entre les boutons */
+  margin-bottom: 10px; /* petit espacement avec le bloc suivant */
+}
+
+.editing-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px; /* aucun espace entre les deux boutons */
+}
+
+/* Fonds  de carte */
+.basemap-menu {
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  list-style: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 5px;
+  padding: 5px 0;
+}
+
+.basemap-menu li {
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.basemap-menu li:hover {
+  background-color: #f5f5f5;
+}
+
+.hidden {
+  display: none;
+}
+
+.basemap-switcher {
+  position: relative;
+}
+
+.basemap-menu {
+  position: absolute;
+  top: 40px; /* décalé sous l'icône */
+  right: 0;
+  z-index: 999;
+  width: max-content;
+}
+
+/* Affichage d'un apercu des noms des icons de la barre de droite */
+.right-tools.collapsed button[title]::after {
+  content: attr(title);
+  position: absolute;
+  right: 50px;
+  background: rgba(132, 151, 155, 0.8);
+  color: white;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.right-tools.collapsed button[title]:hover::after {
+  opacity: 1;
+}
+
+.right-tools button {
+  background: white;
+  /* color: #333;
+  border: 1px solid #ccc; */
+  padding: 8px;
+  font-size: 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-measure {
+  position: absolute;
+  top: 280px; /* ajuste selon la position de ton bouton */
+  right: 70px; /* s’affiche vers la gauche du bouton */
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 5px 0;
+  width: 140px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.menu-measure li {
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.menu-measure li:hover {
+  background-color: #f0f0f0;
+}
+
+.hidden {
+  display: none;
+}
+
+
+
+/* FENETRE CONTEXTUELLE */
+.custom-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5); /* Fond semi-transparent */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.custom-modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  text-align: center;
+}
+
+.modal-content button {
+  margin-top: 15px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  background: #237bdf;
+  color: white;
+  cursor: pointer;
+}
+
+
+/* ASPECTS RESPONSIFS DE LA PAGE */
+
+/*Responsive : écran moyen (PC) */
+@media screen and (min-width: 1024px) and (max-width: 1440px) {
+  .topbar{
+    font-size: 9px;
+    width: 89%;
+  }
+
+  .sidebar {
+    width: 320px;
+    padding: 15px;
+    font-size: 16px;
+  }
+}
+
+/*Responsive : petit écran (Tablettes) */
+@media screen and (min-width: 768px) and (max-width: 1023px) {
+  .topbar{
+    font-size: 9px;
+    width: 83%;
+  }
+
+  .sidebar {
+    width: 25%;
+    left: 5%;
+    top: 80px;
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .sidebar h3 {
+    font-size: 12px;
+  }
+
+  .sidebar label {
+    display: block;
+    margin-bottom: 7px;
+  }
+}
+
+/*Responsive : petit écran (Telephones) */
+@media screen and (min-width: 320px) and (max-width: 767px) {
+  .topbar{
+    width: 77%;
+    font-size: 12px;
+  }
+
+  .sidebar {
+    width: 25%;
+    left: 5%;
+    top: 80px;
+    font-size: 12px;
+    padding: 10px;
+  }
+
+  .sidebar h3 {
+    font-size: 14px;
+  }
+}

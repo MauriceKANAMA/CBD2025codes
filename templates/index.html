@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <title>Centre des affaires de Lubumbashi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+    <!-- Link CSS realiser -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}"> 
+
+    <!-- Ajout de font awesome pour personnaliser mes icones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- CSS pour la règle de mesure -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.polylinemeasure/Leaflet.PolylineMeasure.css" />
+
+    
+  </head>
+  <body>
+
+    <!-- BARRE HORIZONTAL EN HAUT -->
+
+    <!--Affichage de la barre de haut-->
+    <section class="topbar">
+      <h2 class="name">Centre des affaires de Lubumbashi</h2>
+      <button class="Contact">Contact</button>
+    </section>
+
+    <!--Affichage de la carte-->
+    <div id="map"></div>
+
+    <!-- SIDEBAR DE GAUCHE -->
+
+    <!--Ajout d'un bouton pour afficher et masquer le menu de gauche-->
+    <button class="toggle-sidebar" aria-label="Afficher/Masquer le menu">☰</button>
+
+    <!--Menu de gauche-->
+    <section class="sidebar">
+      <h3><strong>Catégories</strong></h3>
+      <select id="categorie" name="categorie">
+        <option value="" selected>-- Choisis une catégorie --</option>
+        <option value="Alimentation">Alimentations</option>
+        <option value="Equipements">Équipements</option>
+        <option value="Habillement">Habillements</option>
+        <option value="Hôtels - Restaurants - Cafés">Hôtels - Restaurants - Cafés</option>
+        <option value="Loisirs - Luxe - Culture">Loisirs - Luxe - Culture</option>
+        <option value="Services">Services</option>
+      </select>
+
+      <!--Affichage de la barre de recherche-->
+      <h3><strong>Recherche</strong></h3>
+      <div class="search-container">
+        <input type="text" id="search" name="search" placeholder="Ecrivez un nom (magasin, avenue, etc.)" aria-label="Rechercher un lieu" autocomplete="off">
+        <span class="search-icon">🔍</span>
+      </div>
+
+      <!-- Liste dynamique des recherches -->
+       <ul id="searchResults" class="search-results"></ul>
+
+      <!-- Boutton de reinitialisation des options de recherches -->
+      <button id="resetFilters" class="reset-button">Réinitialiser les filtres</button>
+
+    </section>
+
+
+    <!-- SIDEBAR DE DROITE -->
+
+    <section class="right-tools" id="rightSidebar">
+      <div class="right-content">
+        
+        <!-- Boutons de zoom -->
+        <div class="zoom-controls">
+          <button id="zoomIn" title="zoom avant"><i class="fas fa-plus"></i></button>
+          <button id="zoomOut" title="zoom arrière"><i class="fas fa-minus"></i></button>
+        </div>
+
+        <!-- Bouton pour zoom étendu -->
+        <div class="zoom-extent">
+          <button id="zoomExtentBtn" title="Vue d'ensemble"><i class="fas fa-home"></i></button>
+        </div>
+
+
+        <!-- Boutons des fonds des cartes -->
+        <div class="basemap-switcher">
+          <button id="baseLayerBtn" title="Changer le fond de carte"><i class="fas fa-layer-group"></i></button>
+          <ul id="basemapMenu" class="basemap-menu hidden">
+            <li data-layer="osm">OpenStreetMap</li>
+            <li data-layer="esri">ESRI Satellite</li>
+          </ul>
+        </div>
+
+        <!-- Bouton pour la modification des donnees -->
+        <!--<div class="editing-tools">
+          <button id="addPointBtn" title="Ajouter un point"><i class="fas fa-map-marker-alt"></i></button>
+          <button id="editPointBtn" title="Modifier un point"><i class="fas fa-pen"></i></button>
+        </div>-->
+
+        <!-- Bouton de mesure lineaire -->
+        <button id="measureBtn" title="Mesurer la distance"><i class="fas fa-ruler"></i></button>
+
+        <!-- Ma position -->
+        <button id="locateBtn" title="Ma position"><i class="fas fa-crosshairs"></i></button>
+
+
+        
+      </div>
+    </section>
+
+    <!-- FENETRE CONTEXTUELLE -->
+    <!-- Modal pour l'édition des points -->
+    <div id="modalMessage" class="custom-modal hidden">
+      <div class="modal-content">
+        <p>Cliquez sur un point pour modifier.</p>
+        <button id="closeModalBtn">Fermer</button>
+      </div>
+    </div>
+
+    <!-- Modal pour l'ajout de points -->
+    <div id="modalAddPoint" class="custom-modal hidden">
+      <div class="modal-content">
+        <p>Cliquez sur la carte pour ajouter un nouveau point.</p>
+        <button id="closeAddPointModalBtn">Fermer</button>
+      </div>
+    </div>
+
+    <!-- Ajout d'un outil pour dire de patienter (Spinner) -->
+    <div id="spinner" class="hidden">
+      <div class="loader"></div>
+    </div>
+
+    <!-- Menu pour la fonction de mesure -->
+    <ul id="measureMenu" class="menu-measure hidden">
+      <li id="startMeasure">➕ Démarrer</li>
+      <li id="clearMeasure">🔁 Réinitialiser</li>
+      <li id="closeMeasure">❌ Fermer</li>
+    </ul>
+
+    <!-- Menu pour le suivi en temps reel -->
+    <!-- Modale de suivi de position -->
+    <div id="modalTrackingMessage" class="modal hidden" style="z-index: 1200;">
+      <div class="modal-content" style="padding: 15px; max-width: 300px; font-size: 14px; text-align:center;">
+        <span id="trackingMessageContent"></span>
+        <br>
+        <button id="closeTrackingMessageBtn" style="margin-top: 10px; padding: 5px 10px; cursor:pointer;">Fermer</button>
+      </div>
+    </div>
+
+
+
+
+    <!-- LIEN JavaScripts -->
+    <!-- Lien avec les fichiers JavaScript -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- JS pour la règle de mesure -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.polylinemeasure/Leaflet.PolylineMeasure.min.js"></script>
+
+    <script src="{{ url_for('static', filename='js/script.js')}}"></script>
+
+  </body>
+</html>
