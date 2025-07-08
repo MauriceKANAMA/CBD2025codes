@@ -453,6 +453,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  document.querySelector('.Contact').addEventListener('click', function () {
+    // Remplace par ton adresse email
+    const email = 'mauricekanama1@email.com';
+    const subject = encodeURIComponent('Demande de contact');
+    const body = encodeURIComponent('Bonjour,\n\nJe souhaite entrer en contact avec vous concernant votre application web SIG du centre des affaires de Lubumbashi.');
+
+      // Crée une URL mailto
+      const mailtoUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;
+
+      // Ouvre Gmail dans un nouvel onglet
+      window.open(mailtoUrl, '_blank');
+  });
 
 
 });
