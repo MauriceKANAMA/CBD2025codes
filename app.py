@@ -4,9 +4,9 @@ from geoalchemy2 import Geometry
 from geoalchemy2.shape import from_shape, to_shape
 from shapely.geometry import shape, Point
 from dotenv import load_dotenv
-import requests
 from flask_cors import CORS
 from flask_caching import Cache
+import requests
 import os
 
 load_dotenv()
