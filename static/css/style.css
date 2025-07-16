@@ -12,6 +12,32 @@ body, html {
   z-index: 1;
 }
 
+/* Personnalisation du contenu du popup Leaflet */
+.custom-popup {
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  color: #333;
+  max-width: 250px;
+  line-height: 1.4;
+}
+
+.custom-popup h3 {
+  margin-top: 0;
+  font-size: 16px;
+  color: #007bff;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.custom-popup p {
+  margin: 6px 0;
+}
+
+.custom-popup strong {
+  color: #000;
+}
+
 /* SPINNER MODERNE */
 #spinner {
   position: fixed;

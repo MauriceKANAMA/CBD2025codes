@@ -109,13 +109,16 @@ document.addEventListener("DOMContentLoaded", function () {
           const adresse = feature.properties.adresses || "Aucune adresse disponible";
 
           layer.bindPopup(
-            `<strong>Nom</strong> : ${nom}` +
-            `<br><strong>Catégorie</strong> : ${categorie}` +
-            `<br><strong>Sous-catégorie</strong> : ${sousCategorie}` +
-            `<br><strong>Rubrique</strong> : ${Rubrique}` +
-            `<br><strong>Description</strong> : ${description}` +
-            `<br><strong>Adresse</strong> : Avenue ${adresse}`
+            `<div class="custom-popup">
+                <h3><i class="fas fa-store"></i> ${nom}</h3>
+                <p><strong>Catégorie :</strong> ${categorie}</p>
+                <p><strong>Sous-catégorie :</strong> ${sousCategorie}</p>
+                <p><strong>Rubrique :</strong> ${Rubrique}</p>
+                <p><strong>Description :</strong> ${description}</p>
+                <p><strong>Adresse :</strong> Avenue ${adresse}</p>
+            </div>`
           );
+
 
           layer.on("click", function () {
             if (!modificationActive) return; // Si on n’est pas en mode édition, on ignore le clic
