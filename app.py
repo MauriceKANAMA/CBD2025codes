@@ -36,7 +36,7 @@ class Inventaire(db.Model):
     __tablename__ = 'Inventaire_complet'
     id = db.Column('id', db.Integer, primary_key=True)
     geom = db.Column(Geometry('POINT', srid=4326))
-    Nilots = db.Column('n° ilots', db.String(254))
+    Nilots = db.Column('n_ilots', db.String(254))
     NomEtabliss = db.Column('nom_etabli', db.String(254))
     Categorie = db.Column('categories', db.String(254))
     Sous_categorie = db.Column('sous-categ ', db.String(254))
@@ -50,7 +50,7 @@ def serialize_inventaire(obj):
     return {
         'id': obj.id,
         'geom': {'lat': point.y, 'lng': point.x},
-        'Nilots': obj.Nilots,
+        'Nilots': obj.N_ilots,
         'NomEtabliss': obj.NomEtabliss,
         'Categorie': obj.Categorie,
         'Sous_categorie': obj.Sous_categorie,
@@ -87,7 +87,6 @@ def get_geojson():
                 "id": item.id,
                 "NomEtabliss": item.NomEtabliss,
                 "Categorie": item.Categorie,
-                # etc.
             }
         })
     return jsonify({"type": "FeatureCollection", "features": features})
