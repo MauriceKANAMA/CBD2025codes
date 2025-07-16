@@ -51,10 +51,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("spinner").classList.add("hidden");
   }
 
-
-  // Appel de la donnee par API Rest GET declarer dans le code flask python
-  // const Inventaire = "/api/inventaire/geojson";
-
   let allFeatures = []; // Pour stocker toutes les entités initiales
   let markers = L.layerGroup(); // Cluster global
 
