@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   //AJOUT DE NOS COUCHES 
   //Chargement des données WFS GeoJSON pour l'inventaire
-  const Inventaire = "http://3.93.217.173:8080/geoserver/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CDB_Lushi_2025%3AInventaire_complet&outputFormat=application%2Fjson&maxFeatures=2554";
+  const Inventaire = "http://3.93.217.173:8080/geoserver/CDB_Lushi_2025/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CDB_Lushi_2025%3AInventaire_complet&outputFormat=application%2Fjson&maxFeatures=2554";
   
   // Affichage du spinner lors du chargement des données
   function showSpinner() {
@@ -91,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
           (props.nom_etabli && props.nom_etabli.toLowerCase().includes(terme)) ||
           (props.adresses && props.adresses.toLowerCase().includes(terme)) ||
           (props.description && props.description.toLowerCase().includes(terme)) ||
-          (props["sous-categorie"] && props["sous-categorie"].toLowerCase().includes(terme)) ||
+          (props.sous_categ && props.sous_categ.toLowerCase().includes(terme)) ||
           (props.types_rubr && props.types_rubr.toLowerCase().includes(terme)) ||
           (props.categories && props.categories.toLowerCase().includes(terme))
         );
