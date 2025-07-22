@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   //AJOUT DE NOS COUCHES 
   //Chargement des données WFS GeoJSON pour l'inventaire
-  const Inventaire = "http://3.93.217.173:8080/geoserver/CDB_Lushi_2025/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CDB_Lushi_2025%3AInventaire_complet&outputFormat=application%2Fjson&maxFeatures=2554";
+  const Inventaire = "https://geoserver.duckdns.org/geoserver/CDB_Lushi_2025/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CDB_Lushi_2025%3AInventaire_complet&outputFormat=application%2Fjson&maxFeatures=2554";
   
   // Affichage du spinner lors du chargement des données
   function showSpinner() {
