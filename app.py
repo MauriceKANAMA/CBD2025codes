@@ -11,12 +11,6 @@ import os
 
 load_dotenv()
 
-# Configuration de la connexion a PostgreSQL/PostGIS
-DB_URL = (
-    f"postgresql+psycopg2://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}"
-    f"@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
-)
-
 app = Flask(__name__)
 CORS(app)
 
@@ -97,5 +91,5 @@ def homePage():
     return render_template('index.html')
 
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 10000))
+    port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
