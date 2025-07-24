@@ -463,13 +463,17 @@ body, html {
     font-size: 12px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
-
   .sidebar {
-    width: 25%;
-    left: 5%;
+    position: absolute;
     top: 80px;
-    font-size: 12px;
-    padding: 10px;
+    left: 20px;
+    background: rgba(254, 255, 255, 0.3);
+    padding: 20px;
+    width: 100px;
+    border-radius: 10px;
+    z-index: 999;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    font-size: 14px;
   }
 
   .sidebar h3 {
