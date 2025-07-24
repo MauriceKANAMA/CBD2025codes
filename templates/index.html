@@ -2,8 +2,14 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8">
-    <title>Centre des affaires de Lubumbashi</title>
+    <meta name="description" content="Carte interactive du Centre des affaires de Lubumbashi (CBD Lubumbashi) : explorez les commerces, services et points d’intérêt de la ville.">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+    <!-- Titre de l'application web SIG -->
+    <title>Centre des affaires de Lubumbashi</title>
+
+    <!-- Lien pour mon favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
 
     <!-- Link CSS realiser -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -29,14 +35,17 @@
     <!-- SIDEBAR DE GAUCHE -->
 
     <!--Ajout d'un bouton pour afficher et masquer le menu de gauche-->
-    <button class="toggle-sidebar" aria-label="Afficher/Masquer le menu">☰</button>
+    <button class="toggle-sidebar" aria-label="Afficher ou masquer le menu latéral">
+      <i class="fas fa-bars"></i>
+    </button>
+
 
     <!--Menu de gauche-->
     <section class="sidebar">
       <h3><strong>Catégories</strong></h3>
       <select id="categorie" name="categorie">
-        <option value="">-- Choisis une catégorie --</option>
-        <option value="Alimentation" selected>Alimentations</option>
+        <option value="" selected>-- Choisissez une catégorie --</option>
+        <option value="Alimentation">Alimentations</option>
         <option value="Equipements">Équipements</option>
         <option value="Habillement">Habillements</option>
         <option value="Hôtels - Restaurants - Cafés">Hôtels - Restaurants - Cafés</option>
