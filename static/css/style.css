@@ -95,7 +95,6 @@ body, html {
   position: absolute;
   top: 10px;
   left: 45px;
-  width: 90%;
   height: 50px;
   background: white;
   border-radius: 10px;
@@ -104,7 +103,7 @@ body, html {
   align-items: center;
   padding: 0 20px;
   z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 5px rgba(0,0,0,0.1);
 }
 
 /* Parametre du texte de la barre de haut */
@@ -137,7 +136,7 @@ body, html {
   padding: 10px 14px;
   border-radius: 5px;
   cursor: pointer;
-  font-size: 20px;
+  font-size: 18px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
@@ -162,6 +161,7 @@ body, html {
 
 /* Formatage des titres du 3eme niveau */
 .sidebar h3 {
+  font-size: 18px;
   margin-top: 15px;
   margin-bottom: 5px;
 }
@@ -170,7 +170,7 @@ body, html {
   padding: 6px; 
   border-radius: 6px; 
   border: 1px solid #ccc; 
-  width: 100%; 
+  width: 70%; 
   max-width: 300px;
 }
 
@@ -179,8 +179,8 @@ body, html {
   padding: 8px; 
   border: 1px solid #ccc; 
   border-radius: 6px;
-  width: 93%; 
-  max-width: 300px; 
+  width: 70%; 
+  max-width: 210px; 
   margin-top: 1px;
 }
 
@@ -428,9 +428,40 @@ body, html {
 
 /*Responsive : petit écran (Telephones) */
 @media screen and (min-width: 320px) and (max-width: 767px) {
-  .topbar{
+  .topbar {
+    position: absolute;
+    top: 10px;
+    left: 35px;
+    right: 30px;
+    width: 70%;
+    height: 50px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10 10px;
+    z-index: 1000;
+    box-shadow: 0 10px 5px rgba(0,0,0,0.1);
+  }
+  .topbar .name{
     width: 77%;
     font-size: 12px;
+  }
+
+  .toggle-sidebar {
+    position: absolute;
+    top: 80px;
+    left: 20px;
+    z-index: 1001;
+    background: rgba(0, 123, 255, 0.80);
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 12px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
 
   .sidebar {
@@ -442,6 +473,6 @@ body, html {
   }
 
   .sidebar h3 {
-    font-size: 14px;
+    font-size: 10px;
   }
 }
