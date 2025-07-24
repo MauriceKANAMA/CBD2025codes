@@ -119,10 +119,6 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>`
           );
 
-
-          layer.on("click", function () {
-            if (!modificationActive) return; // Si on n’est pas en mode édition, on ignore le clic
-
             const props = feature.properties;
             const id = props.id;
             const latlng = layer.getLatLng();
