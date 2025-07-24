@@ -119,76 +119,75 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>`
           );
 
-            const props = feature.properties;
-            const id = props.id;
-            const latlng = layer.getLatLng();
+          const props = feature.properties;
+          const id = props.id;
+          const latlng = layer.getLatLng();
 
-            const formHtml = `
-              <form id="editForm">
-                <label>Nom :</label><br>
-                <input type="text" id="editNom" value="${props.nom_etabli || ''}"><br>
+          const formHtml = `
+            <form id="editForm">
+              <label>Nom :</label><br>
+              <input type="text" id="editNom" value="${props.nom_etabli || ''}"><br>
 
-                <label>Catégorie :</label><br>
-                <input type="text" id="editCategorie" value="${props.categories || ''}"><br>
+              <label>Catégorie :</label><br>
+              <input type="text" id="editCategorie" value="${props.categories || ''}"><br>
 
-                <label>Sous-catégorie :</label><br>
-                <input type="text" id="editSousCateg" value="${props['sous-categorie'] || ''}"><br>
+              <label>Sous-catégorie :</label><br>
+              <input type="text" id="editSousCateg" value="${props['sous-categorie'] || ''}"><br>
 
-                <label>Rubriques :</label><br>
-                <input type="text" id="editRubr" value="${props.types_rubr || ''}"><br>
+              <label>Rubriques :</label><br>
+              <input type="text" id="editRubr" value="${props.types_rubr || ''}"><br>
 
-                <label>Description :</label><br>
-                <textarea id="editDesc">${props.description || ''}</textarea><br>
+              <label>Description :</label><br>
+              <textarea id="editDesc">${props.description || ''}</textarea><br>
 
-                <label>Avenue :</label><br>
-                <input type="text" id="editAdresse" value="${props.adresses || ''}"><br>
+              <label>Avenue :</label><br>
+              <input type="text" id="editAdresse" value="${props.adresses || ''}"><br>
 
-                <label>Date :</label><br>
-                <input type="date" id="editDate" value="${props.time || ''}"><br>
+              <label>Date :</label><br>
+              <input type="date" id="editDate" value="${props.time || ''}"><br>
 
-                <button type="submit">✅ Modifier</button>
-              </form>
-            `;
+              <button type="submit">✅ Modifier</button>
+            </form>
+          `;
 
-            const popup = L.popup()
-              .setLatLng(latlng)
-              .setContent(formHtml)
-              .openOn(map);
+          const popup = L.popup()
+            .setLatLng(latlng)
+            .setContent(formHtml)
+            .openOn(map);
 
-            setTimeout(() => {
-              document.getElementById("editForm").addEventListener("submit", function (event) {
-                event.preventDefault();
+          setTimeout(() => {
+            document.getElementById("editForm").addEventListener("submit", function (event) {
+              event.preventDefault();
 
-                const updatedPoint = {
-                  geom: { lat: latlng.lat, lng: latlng.lng },
-                  NomEtabliss: document.getElementById("editNom").value,
-                  Categorie: document.getElementById("editCategorie").value,
-                  Sous_categorie: document.getElementById("editSousCateg").value,
-                  Rubriques: document.getElementById("editRubr").value,
-                  Description: document.getElementById("editDesc").value,
-                  Avenue: document.getElementById("editAdresse").value,
-                  Date: document.getElementById("editDate").value,
-                };
+              const updatedPoint = {
+                geom: { lat: latlng.lat, lng: latlng.lng },
+                NomEtabliss: document.getElementById("editNom").value,
+                Categorie: document.getElementById("editCategorie").value,
+                Sous_categorie: document.getElementById("editSousCateg").value,
+                Rubriques: document.getElementById("editRubr").value,
+                Description: document.getElementById("editDesc").value,
+                Avenue: document.getElementById("editAdresse").value,
+                Date: document.getElementById("editDate").value,
+              };
 
-                fetch(`/api/inventaire/${id}`, {
-                  method: "PUT",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(updatedPoint)
-                })
-                .then(res => res.json())
-                .then(data => {
-                  alert("✅ Point modifié avec succès !");
-                  modificationActive = false;
-                  map.closePopup();
-                  location.reload();
-                })
-                .catch(err => {
-                  console.error("Erreur :", err);
-                  alert("❌ Erreur lors de la modification.");
-                });
+              fetch(`/api/inventaire/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(updatedPoint)
+              })
+              .then(res => res.json())
+              .then(data => {
+                alert("✅ Point modifié avec succès !");
+                modificationActive = false;
+                map.closePopup();
+                location.reload();
+              })
+              .catch(err => {
+                console.error("Erreur :", err);
+                alert("❌ Erreur lors de la modification.");
               });
-            }, 100);
-          });
+            });
+          }, 100);
         }
       },
       pointToLayer: function (feature, latlng) {
