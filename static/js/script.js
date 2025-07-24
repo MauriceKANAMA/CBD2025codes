@@ -123,7 +123,6 @@ document.addEventListener("DOMContentLoaded", function () {
           layer.on("click", function () {
 
             const popup = L.popup()
-              .openOn(map);
 
             setTimeout(() => {
               document.getElementById("editForm").addEventListener("submit", function (event) {
