@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let dataFiltrée = allFeatures;
 
     // Filtrage par catégorie
-    if (categorieFiltre && categorieFiltre !== "-- Choisir une catégorie --") {
+    if (categorieFiltre && categorieFiltre !== "Alimentation") {
       dataFiltrée = dataFiltrée.filter(f => f.properties.categories === categorieFiltre);
     }
 
