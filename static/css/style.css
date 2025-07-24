@@ -12,6 +12,19 @@ body, html {
   z-index: 1;
 }
 
+.favicon-icon {
+  height: 24px;
+  width: 24px;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
 /* Personnalisation du contenu du popup Leaflet */
 .custom-popup {
   font-family: Arial, sans-serif;
