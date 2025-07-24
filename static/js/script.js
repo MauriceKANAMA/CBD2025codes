@@ -122,40 +122,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
           layer.on("click", function () {
 
-            const props = feature.properties;
-            const id = props.id;
-            const latlng = layer.getLatLng();
-
-            const formHtml = `
-              <form id="editForm">
-                <label>Nom :</label><br>
-                <input type="text" id="editNom" value="${props.nom_etabli || ''}"><br>
-
-                <label>Catégorie :</label><br>
-                <input type="text" id="editCategorie" value="${props.categories || ''}"><br>
-
-                <label>Sous-catégorie :</label><br>
-                <input type="text" id="editSousCateg" value="${props['sous-categorie'] || ''}"><br>
-
-                <label>Rubriques :</label><br>
-                <input type="text" id="editRubr" value="${props.types_rubr || ''}"><br>
-
-                <label>Description :</label><br>
-                <textarea id="editDesc">${props.description || ''}</textarea><br>
-
-                <label>Avenue :</label><br>
-                <input type="text" id="editAdresse" value="${props.adresses || ''}"><br>
-
-                <label>Date :</label><br>
-                <input type="date" id="editDate" value="${props.time || ''}"><br>
-
-                <button type="submit">✅ Modifier</button>
-              </form>
-            `;
-
             const popup = L.popup()
-              .setLatLng(latlng)
-              .setContent(formHtml)
               .openOn(map);
 
             setTimeout(() => {
