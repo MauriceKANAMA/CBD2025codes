@@ -444,10 +444,16 @@ body, html {
     z-index: 1000;
     box-shadow: 0 10px 5px rgba(0,0,0,0.1);
   }
-  .topbar .name{
-    width: 77%;
+  .topbar .name {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     font-size: 12px;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
   }
+
 
   .toggle-sidebar {
     position: absolute;
@@ -463,17 +469,41 @@ body, html {
     font-size: 12px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   }
-  .sidebar {
-    position: absolute;
-    top: 80px;
-    left: 20px;
-    background: rgba(254, 255, 255, 0.3);
-    padding: 20px;
-    width: 100px;
-    border-radius: 10px;
-    z-index: 999;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    font-size: 14px;
+
+   #categorie,
+  #search,
+  .search-container input[type="text"],
+  .reset-button {
+    width: 100%;
+    max-width: none;
+    font-size: 13px;
+    box-sizing: border-box;
+  }
+
+  .search-container {
+    width: 100%;
+  }
+
+  .search-container .search-icon {
+    font-size: 12px;
+    right: 10px;
+  }
+
+  .search-results {
+    font-size: 12px;
+    max-height: 100px;
+  }
+
+  .reset-button {
+    padding: 6px 10px;
+  }
+
+  .sidebar h3 {
+    font-size: 13px;
+  }
+
+  label {
+    font-size: 13px;
   }
 
   .sidebar h3 {
