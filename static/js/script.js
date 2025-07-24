@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
     .then(response => response.json())
     .then(data => {
       allFeatures = data.features;
-      afficherFeaturesFiltrées(""); // Rendu des entités
+      afficherFeaturesFiltrées("Alimentation"); // Rendu des entités
     })
     .catch(error => {
       console.error("Erreur lors du chargement WFS GeoJSON :", error);
