@@ -60,8 +60,12 @@ document.addEventListener("DOMContentLoaded", function () {
     .then(response => response.json())
     .then(data => {
       allFeatures = data.features;
-      afficherFeaturesFiltrées(""); // Rendu des entités
+      // Sélection automatique de la catégorie "Alimentation"
+      document.getElementById("categorie").value = "Alimentation";
+      afficherFeaturesFiltrées("Alimentation"); // Affichage auto de cette catégorie
+
     })
+
     .catch(error => {
       console.error("Erreur lors du chargement WFS GeoJSON :", error);
     })
