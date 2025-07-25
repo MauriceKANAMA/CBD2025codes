@@ -131,42 +131,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
           layer.on("click", function () {
-
             const popup = L.popup()
-
-            setTimeout(() => {
-              document.getElementById("editForm").addEventListener("submit", function (event) {
-                event.preventDefault();
-
-                const updatedPoint = {
-                  geom: { lat: latlng.lat, lng: latlng.lng },
-                  NomEtabliss: document.getElementById("editNom").value,
-                  Categorie: document.getElementById("editCategorie").value,
-                  sousCategorie: document.getElementById("editSousCateg").value,
-                  Rubriques: document.getElementById("editRubr").value,
-                  Description: document.getElementById("editDesc").value,
-                  Avenue: document.getElementById("editAdresse").value,
-                  Date: document.getElementById("editDate").value,
-                };
-
-                fetch(`/api/inventaire/${id}`, {
-                  method: "PUT",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(updatedPoint)
-                })
-                .then(res => res.json())
-                .then(data => {
-                  alert("✅ Point modifié avec succès !");
-                  modificationActive = false;
-                  map.closePopup();
-                  location.reload();
-                })
-                .catch(err => {
-                  console.error("Erreur :", err);
-                  alert("❌ Erreur lors de la modification.");
-                });
-              });
-            }, 100);
           });
         }
       },
@@ -380,7 +345,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // 🔄 Changer le style du bouton
       locateBtn.classList.remove("btn-inactive");
       locateBtn.classList.add("btn-active");
-      locateBtn.textContent = "🛰️ Suivi activé (cliquer pour arrêter)";
+      locateBtn.textContent = "🛰️";
     } else {
       // ⛔ DÉSACTIVER LE SUIVI
       navigator.geolocation.clearWatch(trackingId);
@@ -400,7 +365,7 @@ document.addEventListener("DOMContentLoaded", function () {
       // 🔁 Changer l’apparence du bouton
       locateBtn.classList.remove("btn-active");
       locateBtn.classList.add("btn-inactive");
-      locateBtn.textContent = "📡 Activer ma position";
+      locateBtn.textContent = "📡";
     }
   });
 
