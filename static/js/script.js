@@ -1,9 +1,27 @@
 document.addEventListener("DOMContentLoaded", function () {
   // Ajout de la position de notre carte sur notre page (GetMap)
   const map = L.map('map', {
-      editable: true,
-      zoomControl: false // Désactive les boutons par défaut
+    editable: true,
+    zoomControl: false // Désactive les boutons par défaut
   }).setView([-11.6645, 27.484], 15.4);
+
+  L.control.mousePosition({
+    position: 'bottomright',
+    separator: ' , ',
+    emptyString: 'Position: Indéfinie',
+    lngFirst: false,
+    numDigits: 5,
+    prefix: "Coordonnées"
+  }).addTo(map);
+
+
+  // Ajout de l'echelle de zoom de la carte
+  L.control.scale({
+    position: 'bottomleft',
+    metric: true,      // Affiche l’échelle en mètres/kilomètres
+    imperial: true,   // Affiche les unités impériales (pieds/miles)
+    maxWidth: 100     // Largeur max en pixels de l’échelle
+  }).addTo(map);
 
   const positionInitiale = {
     coords: [-11.6645, 27.484],
@@ -26,7 +44,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Fond de carte OSM et ESRI
   const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', 
       {foo: 'bar', 
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 22
   }).addTo(map);
 
   const Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -115,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function () {
           const categorie = feature.properties.categories || "Non définie";
           const sousCategorie = feature.properties.sous_categ || "Non définie";
           const Rubrique = feature.properties.types_rubr || "Non définie";
-          const description = feature.properties.descriptio || "Aucune description disponible";
+          const description = feature.properties.descriptio || "Inconnu";
           const adresse = feature.properties.adresses || "Aucune adresse disponible";
 
           layer.bindPopup(
