@@ -44,6 +44,21 @@ body, html {
   gap: 10px;
 }
 
+.leaflet-control-mouseposition {
+  position: absolute !important;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 5px 10px;
+  font-weight: bold;
+  border-radius: 6px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+
 
 /* Personnalisation du contenu du popup Leaflet */
 .custom-popup {

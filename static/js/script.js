@@ -5,14 +5,20 @@ document.addEventListener("DOMContentLoaded", function () {
     zoomControl: false // Désactive les boutons par défaut
   }).setView([-11.6645, 27.484], 15.4);
 
-  L.control.mousePosition({
-    position: 'bottomright',
-    separator: ' , ',
-    emptyString: 'Position: Indéfinie',
-    lngFirst: false,
-    numDigits: 5,
-    prefix: "Coordonnées"
-  }).addTo(map);
+  if (typeof L.control.mousePosition === 'function') {
+    L.control.mousePosition({
+      position: 'bottomleft', // position temporaire
+      separator: ' , ',
+      emptyString: 'Coordonnées : Indéfinies',
+      lngFirst: false,
+      numDigits: 5,
+      prefix: "Coordonnées"
+    }).addTo(map);
+  } else {
+    console.warn("❌ Le plugin Leaflet.MousePosition n'a pas été chargé.");
+  }
+
+
 
 
   // Ajout de l'echelle de zoom de la carte
@@ -44,12 +50,12 @@ document.addEventListener("DOMContentLoaded", function () {
   // Fond de carte OSM et ESRI
   const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', 
       {foo: 'bar', 
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy;Copyright 2025',
       maxZoom: 22
   }).addTo(map);
 
   const Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    attribution: '&copy; Esri the GIS User Community &copy;Copyright 2025'
   });
 
   // Sélection du fond de carte
