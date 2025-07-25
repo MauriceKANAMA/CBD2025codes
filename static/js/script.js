@@ -324,15 +324,16 @@ document.addEventListener("DOMContentLoaded", function () {
     map.setView(positionInitiale.coords, positionInitiale.zoom);
   });
 
-  // Suivi de ma position en temps reel
   let trackingId = null;
   let userMarker = null;
   let userCircle = null;
   let isTracking = false;
 
-  document.getElementById("locateBtn").addEventListener("click", () => {
+  const locateBtn = document.getElementById("locateBtn");
+
+  locateBtn.addEventListener("click", () => {
     if (!isTracking) {
-      // DÉMARRER le suivi en temps réel
+      // ▶️ ACTIVER LE SUIVI
       trackingId = navigator.geolocation.watchPosition(
         position => {
           const lat = position.coords.latitude;
@@ -340,20 +341,20 @@ document.addEventListener("DOMContentLoaded", function () {
           const accuracy = position.coords.accuracy;
           const latlng = L.latLng(lat, lng);
 
-          // Supprimer anciens marqueurs/cercle
+          // Supprimer anciens éléments
           if (userMarker) map.removeLayer(userMarker);
           if (userCircle) map.removeLayer(userCircle);
 
-          // Marqueur de position
+          // 📍 Marqueur utilisateur
           userMarker = L.marker(latlng, {
             icon: L.icon({
               iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
               iconSize: [30, 30],
               iconAnchor: [15, 30]
             })
-          }).addTo(map).bindPopup("📍 Vous êtes ici").openPopup();
+          }).addTo(map).bindPopup("📍 Vous êtes ici");
 
-          // Cercle de précision
+          // 🔵 Cercle de précision
           userCircle = L.circle(latlng, {
             radius: accuracy,
             color: "blue",
@@ -361,8 +362,8 @@ document.addEventListener("DOMContentLoaded", function () {
             fillOpacity: 0.1
           }).addTo(map);
 
-          // Centrer avec zoom arrière léger
-          map.setView(latlng, map.getZoom() - 1);
+          // Centrage sans zoom
+          map.panTo(latlng);
         },
         error => {
           alert("❌ Erreur de géolocalisation : " + error.message);
@@ -375,26 +376,35 @@ document.addEventListener("DOMContentLoaded", function () {
       );
 
       isTracking = true;
-      alert("📡 Suivi en temps réel activé. Si vous voulez le désactiver, cliquez à nouveau sur le bouton");
+
+      // 🔄 Changer le style du bouton
+      locateBtn.classList.remove("btn-inactive");
+      locateBtn.classList.add("btn-active");
+      locateBtn.textContent = "🛰️ Suivi activé (cliquer pour arrêter)";
     } else {
-      // ARRÊTER le suivi
+      // ⛔ DÉSACTIVER LE SUIVI
       navigator.geolocation.clearWatch(trackingId);
       trackingId = null;
       isTracking = false;
 
+      // Supprimer marqueur et cercle
       if (userMarker) {
         map.removeLayer(userMarker);
         userMarker = null;
       }
-
       if (userCircle) {
         map.removeLayer(userCircle);
         userCircle = null;
       }
 
-      alert("🛑 Suivi désactivé");
+      // 🔁 Changer l’apparence du bouton
+      locateBtn.classList.remove("btn-active");
+      locateBtn.classList.add("btn-inactive");
+      locateBtn.textContent = "📡 Activer ma position";
     }
   });
+
+
 
   document.querySelector('.Contact').addEventListener('click', function () {
     // Remplace par ton adresse email
