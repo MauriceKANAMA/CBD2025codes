@@ -5,23 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
     zoomControl: false // Désactive les boutons par défaut
   }).setView([-11.6645, 27.484], 15.4);
 
-  if (typeof L.control.mousePosition === 'function') {
-    L.control.mousePosition({
-      position: 'bottomleft', // position temporaire
-      separator: ' , ',
-      emptyString: 'Coordonnées : Indéfinies',
-      lngFirst: false,
-      numDigits: 5,
-      prefix: "Coordonnées"
-    }).addTo(map);
-  } else {
-    console.warn("❌ Le plugin Leaflet.MousePosition n'a pas été chargé.");
-  }
-
-
-
-
-  // Ajout de l'echelle de zoom de la carte
+   // Ajout de l'echelle de zoom de la carte
   L.control.scale({
     position: 'bottomleft',
     metric: true,      // Affiche l’échelle en mètres/kilomètres
