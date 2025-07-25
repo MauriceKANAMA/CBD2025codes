@@ -18,6 +18,7 @@ body, html {
   margin-right: 10px;
   vertical-align: middle;
 }
+
 .topbar {
   display: flex;
   align-items: center;
@@ -511,5 +512,14 @@ body, html {
 
   .sidebar h3 {
     font-size: 15px;
+  }
+
+  .Contact {
+    background: linear-gradient(45deg, #237bdf, #2fe6ec);
+    color: white;
+    border: none;
+    padding: 3px 9px;
+    border-radius: 20px;
+    cursor: pointer;
   }
 }

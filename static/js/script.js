@@ -3,7 +3,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const map = L.map('map', {
       editable: true,
       zoomControl: false // Désactive les boutons par défaut
-  }).setView([-11.6634, 27.485], 15.4);
+  }).setView([-11.6645, 27.484], 15.4);
+
+  const positionInitiale = {
+    coords: [-11.6645, 27.484],
+    zoom: 15.4
+  };
+
 
   // GESTION DE LA BARRE GAUCHE
   const toggleButton = document.querySelector('.toggle-sidebar');
@@ -107,7 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (feature.properties) {
           const nom = feature.properties.nom_etabli || "Inconnu";
           const categorie = feature.properties.categories || "Non définie";
-          const sousCategorie = feature.properties["sous-categorie"] || "Non définie";
+          const sousCategorie = feature.properties.sous_categorie || "Non définie";
           const Rubrique = feature.properties.types_rubr || "Non définie";
           const description = feature.properties.descriptio || "Aucune description disponible";
           const adresse = feature.properties.adresses || "Aucune adresse disponible";
@@ -205,7 +211,7 @@ document.addEventListener("DOMContentLoaded", function () {
           (props.nom_etabli && props.nom_etabli.toLowerCase().includes(terme)) ||
           (props.adresses && props.adresses.toLowerCase().includes(terme)) ||
           (props.description && props.description.toLowerCase().includes(terme)) ||
-          (props["sous-categorie"] && props["sous-categorie"].toLowerCase().includes(terme)) ||
+          (props.sous_categorie && props.sous_categorie.toLowerCase().includes(terme)) ||
           (props.types_rubr && props.types_rubr.toLowerCase().includes(terme)) ||
           (props.categories && props.categories.toLowerCase().includes(terme))
         );
@@ -267,22 +273,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     document.getElementById("searchResults").innerHTML = "";
 
-    // Appliquer un zoom étendu sur tous les points affichés
-    setTimeout(() => {
-      let bounds2;
-      markers.eachLayer(layer => {
-        if (!bounds2) {
-          bounds2 = layer.getBounds ? layer.getBounds() : L.latLngBounds(layer.getLatLng());
-        } else {
-          bounds2.extend(layer.getBounds ? layer.getBounds() : layer.getLatLng());
-        }
-      });
-      if (bounds2 && bounds2.isValid()) {
-        map.fitBounds(bounds2, { padding: [30, 30] });
-      } else {
-        alert("❌ Aucun point affiché pour effectuer un zoom étendu.");
-      }
-    }, 300); // délai pour attendre le rendu
+    // Recentrer à la position initiale
+    map.setView(positionInitiale.coords, positionInitiale.zoom);
   });
 
   // Basemap switching logic
@@ -329,21 +321,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ZOOM ÉTENDU - Corrigé
   document.getElementById("zoomExtentBtn").addEventListener("click", function () {
-    let bounds;
-
-    markers.eachLayer(layer => {
-      if (!bounds) {
-        bounds = layer.getBounds ? layer.getBounds() : L.latLngBounds(layer.getLatLng());
-      } else {
-        bounds.extend(layer.getBounds ? layer.getBounds() : layer.getLatLng());
-      }
-    });
-
-    if (bounds && bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [30, 30] });
-    } else {
-      alert("❌ Aucun point affiché pour effectuer un zoom étendu.");
-    }
+    map.setView(positionInitiale.coords, positionInitiale.zoom);
   });
 
   // Suivi de ma position en temps reel
