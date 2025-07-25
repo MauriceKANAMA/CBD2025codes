@@ -33,13 +33,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Fond de carte OSM et ESRI
   const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', 
-      {foo: 'bar', 
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy;Copyright 2025',
-      maxZoom: 22
+    {foo: 'bar', 
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy;Copyright 2025',
+    maxZoom: 22
   }).addTo(map);
 
   const Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: '&copy; Esri the GIS User Community &copy;Copyright 2025'
+    attribution: '&copy; Esri the GIS User Community &copy;Copyright 2025',
+    maxZoom: 22
   });
 
   // Sélection du fond de carte
