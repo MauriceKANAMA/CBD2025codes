@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function () {
       allFeatures = data.features;
       // Sélection automatique de la catégorie "Alimentation"
       document.getElementById("categorie").value = "Alimentation";
-      afficherFeaturesFiltrées("Alimentation"); // Affichage auto de cette catégorie
+      afficherFeaturesFiltrées("Alimentation"); // Affichage auto de cette catégorie pour reduire le temps de chargement
 
     })
 
@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (feature.properties) {
           const nom = feature.properties.nom_etabli || "Inconnu";
           const categorie = feature.properties.categories || "Non définie";
-          const sousCategorie = feature.properties.sous_categorie || "Non définie";
+          const sousCategorie = feature.properties.sous_categ || "Non définie";
           const Rubrique = feature.properties.types_rubr || "Non définie";
           const description = feature.properties.descriptio || "Aucune description disponible";
           const adresse = feature.properties.adresses || "Aucune adresse disponible";
@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function () {
                   geom: { lat: latlng.lat, lng: latlng.lng },
                   NomEtabliss: document.getElementById("editNom").value,
                   Categorie: document.getElementById("editCategorie").value,
-                  Sous_categorie: document.getElementById("editSousCateg").value,
+                  sousCategorie: document.getElementById("editSousCateg").value,
                   Rubriques: document.getElementById("editRubr").value,
                   Description: document.getElementById("editDesc").value,
                   Avenue: document.getElementById("editAdresse").value,
@@ -211,7 +211,7 @@ document.addEventListener("DOMContentLoaded", function () {
           (props.nom_etabli && props.nom_etabli.toLowerCase().includes(terme)) ||
           (props.adresses && props.adresses.toLowerCase().includes(terme)) ||
           (props.description && props.description.toLowerCase().includes(terme)) ||
-          (props.sous_categorie && props.sous_categorie.toLowerCase().includes(terme)) ||
+          (props.sous_categ && props.sous_categ.toLowerCase().includes(terme)) ||
           (props.types_rubr && props.types_rubr.toLowerCase().includes(terme)) ||
           (props.categories && props.categories.toLowerCase().includes(terme))
         );
