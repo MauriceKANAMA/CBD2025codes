@@ -198,6 +198,15 @@ body, html {
   font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
+#sousCategorie{
+  padding: 6px; 
+  border-radius: 6px; 
+  border: 1px solid #ccc; 
+  width: 100%; 
+  max-width: 300px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
 /* Bare de recherche */
 #search{
   padding: 8px; 
@@ -510,6 +519,7 @@ body, html {
   }
 
   #categorie,
+  #sousCategorie,
   #search,
   .search-container input[type="text"],
   .reset-button {

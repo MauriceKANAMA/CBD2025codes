@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Ajout de la position de notre carte sur notre page (GetMap)
   const map = L.map('map', {
     editable: true,
-    zoomControl: false // Désactive les boutons par défaut
+    zoomControl: false // Désactivation des boutons zoom par défaut
   }).setView([-11.6645, 27.484], 15.4);
 
    // Ajout de l'echelle de zoom de la carte
@@ -76,6 +76,9 @@ document.addEventListener("DOMContentLoaded", function () {
     .then(response => response.json())
     .then(data => {
       allFeatures = data.features;
+
+      mettreAJourSousCategories("Alimentation");
+
       // Sélection automatique de la catégorie "Alimentation"
       document.getElementById("categorie").value = "Alimentation";
       afficherFeaturesFiltrées("Alimentation"); // Affichage auto de cette catégorie pour reduire le temps de chargement
@@ -86,21 +89,28 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error("Erreur lors du chargement WFS GeoJSON :", error);
     })
     .finally(() => {
-      hideSpinner(); // Toujours arrêter le spinner à la fin
+      hideSpinner(); // Arrête du spinner
     });
 
 
   // Fonction pour le filtrage des entités pour la selection par categorie et recherche par nom
-  function afficherFeaturesFiltrées(categorieFiltre, termeRecherche = "") {
+  function afficherFeaturesFiltrées(categorieFiltre, termeRecherche = "", sousCategorieFiltre = "") {
+
     showSpinner(); // Debut du chargement
     markers.clearLayers();
 
     let dataFiltrée = allFeatures;
 
     // Filtrage par catégorie
-    if (categorieFiltre && categorieFiltre !== "-- Choisir une catégorie --") {
+    if (categorieFiltre && categorieFiltre !== "Choisissez une catégorie") {
       dataFiltrée = dataFiltrée.filter(f => f.properties.categories === categorieFiltre);
     }
+
+    // Filtrage par sous-catégorie
+    if (sousCategorieFiltre && sousCategorieFiltre !== "Choisissez une sous-catégorie") {
+      dataFiltrée = dataFiltrée.filter(f => f.properties.sous_categ === sousCategorieFiltre);
+    }
+
 
     // Filtrage par nom, avenue, rubriques et descriptions
     if (termeRecherche) {
@@ -112,8 +122,7 @@ document.addEventListener("DOMContentLoaded", function () {
           (props.adresses && props.adresses.toLowerCase().includes(terme)) ||
           (props.description && props.description.toLowerCase().includes(terme)) ||
           (props.sous_categ && props.sous_categ.toLowerCase().includes(terme)) ||
-          (props.types_rubr && props.types_rubr.toLowerCase().includes(terme)) ||
-          (props.categories && props.categories.toLowerCase().includes(terme))
+          (props.types_rubr && props.types_rubr.toLowerCase().includes(terme))
         );
       });
     }
@@ -125,7 +134,7 @@ document.addEventListener("DOMContentLoaded", function () {
           const categorie = feature.properties.categories || "Non définie";
           const sousCategorie = feature.properties.sous_categ || "Non définie";
           const Rubrique = feature.properties.types_rubr || "Non définie";
-          const description = feature.properties.descriptio || "Inconnu";
+          const description = feature.properties.descriptio || "Aucune description";
           const adresse = feature.properties.adresses || "Aucune adresse disponible";
 
           layer.bindPopup(
@@ -193,8 +202,8 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    // Afficher les 10 premiers résultats max
-    resultats.slice(0, 10).forEach(feature => {
+    // Afficher les 5 premiers résultats max
+    resultats.slice(0, 5).forEach(feature => {
       const li = document.createElement("li");
       li.textContent = feature.properties.nom_etabli || "Inconnu";
       li.addEventListener("click", () => {
@@ -220,13 +229,56 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // Ajout de la selection a partir des sous categories de la categorie principale
+  const sousCategorieSelect = document.getElementById("sousCategorie");
+
+  function mettreAJourSousCategories(categorie) {
+    const sousCategories = new Set();
+
+    // Extraire toutes les sous-catégories possibles de la catégorie sélectionnée
+    allFeatures.forEach(feature => {
+      if (
+        (!categorie || feature.properties.categories === categorie) &&
+        feature.properties.sous_categ
+      ) {
+        sousCategories.add(feature.properties.sous_categ.trim());
+      }
+    });
+
+    // Nettoyer le menu existant
+    sousCategorieSelect.innerHTML = `<option value="">Choisissez une sous-catégorie</option>`;
+
+    // Ajouter chaque sous-catégorie comme option
+    Array.from(sousCategories).sort().forEach(sc => {
+      const option = document.createElement("option");
+      option.value = sc;
+      option.textContent = sc;
+      sousCategorieSelect.appendChild(option);
+    });
+  }
+
+  sousCategorieSelect.addEventListener("change", function () {
+    const selectedCategorie = document.getElementById("categorie").value;
+    const termeRecherche = document.getElementById("search").value;
+    const sousCategorieFiltre = this.value;
+
+    afficherFeaturesFiltrées(selectedCategorie, termeRecherche, sousCategorieFiltre);
+  });
+
+
   // EVENEMENTS POUR LA RECHERCHE ET LE FILTRAGE
   // Utilisation du select HTML pour la recherche par catégorie
   document.getElementById("categorie").addEventListener("change", function () {
     const selectedCategorie = this.value;
     const termeRecherche = document.getElementById("search").value;
-    afficherFeaturesFiltrées(selectedCategorie, termeRecherche);
+
+    // Mettre à jour la liste des sous-catégories
+    mettreAJourSousCategories(selectedCategorie);
+
+    const sousCategorieFiltre = sousCategorieSelect.value;
+    afficherFeaturesFiltrées(selectedCategorie, termeRecherche, sousCategorieFiltre);
   });
+
 
 
   // Utilisation du boutton HTML pour la recherche
@@ -242,6 +294,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Réinitialise les champs
     document.getElementById("categorie").value = "";
     document.getElementById("search").value = "";
+    document.getElementById("sousCategorie").value = "";
 
     // Recharge toutes les entités
     afficherFeaturesFiltrées("", "");
@@ -250,6 +303,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Recentrer à la position initiale
     map.setView(positionInitiale.coords, positionInitiale.zoom);
+
+    // Mise a jour de la sous categorie
+    mettreAJourSousCategories("");
   });
 
   // Basemap switching logic
@@ -393,6 +449,4 @@ document.addEventListener("DOMContentLoaded", function () {
       // Ouvre Gmail dans un nouvel onglet
       window.open(mailtoUrl, '_blank');
   });
-
-
 });

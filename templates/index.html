@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="description" content="Carte interactive du Centre des affaires de Lubumbashi (CBD Lubumbashi) : explorez les commerces, services et points d’intérêt de la ville.">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
     <!-- Titre de l'application web SIG -->
     <title>Centre des affaires de Lubumbashi</title>
@@ -33,7 +33,9 @@
 
 
     <!--Affichage de la carte-->
-    <div id="map"></div>
+    <main></main>
+      <div id="map"></div>
+    </main>
 
     <!-- SIDEBAR DE GAUCHE -->
 
@@ -47,7 +49,7 @@
     <section class="sidebar">
       <h3><strong>Catégories</strong></h3>
       <select id="categorie" name="categorie">
-        <option value="" selected>-- Choisissez une catégorie --</option>
+        <option value="" selected>Choisissez une catégorie</option>
         <option value="Alimentation">Alimentations</option>
         <option value="Equipements">Équipements</option>
         <option value="Habillement">Habillements</option>
@@ -56,10 +58,17 @@
         <option value="Services">Services</option>
       </select>
 
+      <!--Affichage de la liste des sous-catégories-->
+      <h3><strong>Sous-catégories</strong></h3>
+      <select id="sousCategorie" name="sousCategorie">
+        <option value="" selected>Choisissez une sous-catégorie</option>
+      </select>
+
+
       <!--Affichage de la barre de recherche-->
       <h3><strong>Recherche</strong></h3>
       <div class="search-container">
-        <input type="text" id="search" name="search" placeholder="Ecrivez un nom (magasin, avenue, etc.)" aria-label="Rechercher un lieu" autocomplete="off">
+        <input type="text" id="search" name="search" placeholder="Ecrivez le nom du magasin" aria-label="Rechercher un lieu" autocomplete="off">
       </div>
 
       <!-- Liste dynamique des recherches -->
@@ -98,8 +107,7 @@
         </div>
 
         <!-- Ma position -->
-        <button id="locateBtn" class="btn-inactive" name="Activer ma position">📡</button>
-
+        <button id="locateBtn" class="btn-inactive" title="Activer ma position" aria-label="Activer ma position">📡</button>
 
       </div>
     </section>
