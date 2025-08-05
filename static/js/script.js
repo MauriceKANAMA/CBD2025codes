@@ -32,15 +32,27 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // Fond de carte OSM et ESRI
+  const Carto_Light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap & Carto &copy;Copyright 2025',
+    maxZoom: 22
+  }).addTo(map);
+
   const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', 
     {foo: 'bar', 
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy;Copyright 2025',
     maxZoom: 22
-  }).addTo(map);
+  });
 
   const Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     attribution: '&copy; Esri the GIS User Community &copy;Copyright 2025',
     maxZoom: 22
+  });
+
+  const Stadia_AlidadeSmoothDark = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}', {
+    minZoom: 0,
+    maxZoom: 22,
+    attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    ext: 'png'
   });
 
   // Sélection du fond de carte
@@ -51,13 +63,40 @@ document.addEventListener("DOMContentLoaded", function () {
     } else if (selectedLayer === "esri") {
       map.removeLayer(osm);
       map.addLayer(Esri_WorldImagery);
+    } else if (selectedLayer === "carto") {
+      map.removeLayer(osm);
+      map.removeLayer(Esri_WorldImagery);
+      map.addLayer(Carto_Light);
+    } else if (selectedLayer === "stadia") {
+      map.removeLayer(osm);
+      map.removeLayer(Esri_WorldImagery);
+      map.addLayer(Stadia_AlidadeSmoothDark);
     }
   });
 
   //AJOUT DE NOS COUCHES 
-  //Chargement des données WFS GeoJSON pour l'inventaire
+  //Chargement des données WFS GeoJSON pour l'inventaire et des WMS des autres couches
   const Inventaire = "https://geoservercarto.duckdns.org/geoserver/CDB_Lushi_2025/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CDB_Lushi_2025%3AInventaire_complet&outputFormat=application%2Fjson&maxFeatures=2554";
   
+  const buildingsLayer = L.tileLayer.wms("https://geoservercarto.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
+    layers: "CDB_Lushi_2025:BuildingsCBD",
+    format: "image/png",
+    transparent: true
+  });
+
+  const limitesLayer = L.tileLayer.wms("https://geoservercarto.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
+    layers: "CDB_Lushi_2025:Limites2025",
+    format: "image/png",
+    transparent: true
+  });
+
+  const blocsLayer = L.tileLayer.wms("https://geoservercarto.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
+    layers: "CDB_Lushi_2025:BlocsCBD",
+    format: "image/png",
+    transparent: true
+  });
+
+
   // Affichage du spinner lors du chargement des données
   function showSpinner() {
     document.getElementById("spinner").classList.remove("hidden");
@@ -72,6 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   showSpinner(); // Spinner ON
 
+  // Ajout de la couche Inventaire
   fetch(Inventaire)
     .then(response => response.json())
     .then(data => {
@@ -317,24 +357,28 @@ document.addEventListener("DOMContentLoaded", function () {
     if (e.target.tagName === 'LI') {
       const selectedLayer = e.target.getAttribute("data-layer");
 
+      // Supprimer tous les fonds de carte avant d'ajouter le bon
+      map.removeLayer(osm);
+      map.removeLayer(Esri_WorldImagery);
+      map.removeLayer(Carto_Light);
+      map.removeLayer(Stadia_AlidadeSmoothDark);
+
+      // Ajouter le fond sélectionné
       if (selectedLayer === "osm") {
-        map.removeLayer(Esri_WorldImagery);
         map.addLayer(osm);
       } else if (selectedLayer === "esri") {
-        map.removeLayer(osm);
         map.addLayer(Esri_WorldImagery);
+      } else if (selectedLayer === "carto") {
+        map.addLayer(Carto_Light);
+      } else if (selectedLayer === "stadia") {
+        map.addLayer(Stadia_AlidadeSmoothDark);
       }
 
+      // Masquer le menu après sélection
       document.getElementById("basemapMenu").classList.add("hidden");
     }
   });
 
-  // Fermer si on clique ailleurs
-  document.addEventListener("click", function (e) {
-    if (!baseLayerBtn.contains(e.target) && !basemapMenu.contains(e.target)) {
-      basemapMenu.classList.add("hidden");
-    }
-  });
 
   
 
