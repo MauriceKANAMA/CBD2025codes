@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import from_shape, to_shape
@@ -79,11 +79,19 @@ def get_geojson():
             },
             "properties": {
                 "id": item.id,
-                "NomEtabliss": item.NomEtabliss,
-                "Categorie": item.Categorie,
+                "nom_etabli": item.NomEtabliss,
+                "categories": item.Categorie,
+                "sous_categ": item.SousCategorie,
+                "types_rubr": item.TypesRubrique,
+                "descriptio": item.Description,
+                "adresses": item.Adresse
             }
         })
-    return jsonify({"type": "FeatureCollection", "features": features})
+    return jsonify({
+        "type": "FeatureCollection",
+        "features": features
+    })
+
 
 # Route pour la page d'accueil
 @app.route('/')
@@ -93,3 +101,6 @@ def homePage():
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
+
+# if __name__ == '__main__':
+#     app.run(debug=True)

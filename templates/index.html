@@ -13,6 +13,7 @@
 
     <!-- Link CSS realiser -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css')}}"> 
 
     
@@ -88,28 +89,38 @@
         <!-- Boutons de zoom -->
         <div class="zoom-controls">
           <button id="zoomIn" title="zoom avant"><i class="fas fa-plus"></i></button>
-          <button id="zoomOut" title="zoom arrière"><i class="fas fa-minus"></i></button>
-        </div>
-
-        <!-- Bouton pour zoom étendu -->
-        <div class="zoom-extent">
           <button id="zoomExtentBtn" title="Vue d'ensemble"><i class="fas fa-home"></i></button>
+          <button id="zoomOut" title="zoom arrière"><i class="fas fa-minus"></i></button>
+          <button id="zoomSelectBtn" title="Zoom sur sélection"><i class="fas fa-pen-to-square"></i></button>
+          <button id="measureDistanceBtn" title="Mesurer une distance"><i class="fas fa-ruler"></i></button>
         </div>
 
 
         <!-- Boutons des fonds des cartes -->
         <div class="basemap-switcher">
-          <button id="baseLayerBtn" title="Changer le fond de carte"><i class="fas fa-layer-group"></i></button>
+          <button id="baseLayerBtn" title="Changer le fond de carte"><i class="fas fa-globe"></i></button>
           <ul id="basemapMenu" class="basemap-menu hidden">
             <li data-layer="osm">OpenStreetMap</li>
             <li data-layer="esri">ESRI Satellite</li>
             <li data-layer="carto">Carto Light</li>
-            <li data-layer="stadia">Stadia Alidade Smooth Dark</li>
           </ul>
         </div>
 
         <!-- Ma position -->
         <button id="locateBtn" class="btn-inactive" title="Activer ma position" aria-label="Activer ma position">📡</button>
+
+        <!-- Mesure de distance -->
+        <div id="measureModal" class="modal hidden">
+          <div class="modal-content">
+            <h3>Mesure de distance</h3>
+            <p id="distanceText">Distance : --</p>
+            <div class="button-group">
+              <!-- Bouton Mesure distance -->
+              <button id="deleteMeasureBtn">Supprimer</button>
+              <button id="closeMeasureBtn">Fermer</button>
+            </div>
+          </div>
+        </div>
 
       </div>
     </section>
@@ -119,32 +130,23 @@
       <div class="loader"></div>
     </div>
 
-    <!-- Menu pour la fonction de mesure -->
-    <ul id="measureMenu" class="menu-measure hidden">
-      <li id="startMeasure">➕ Démarrer</li>
-      <li id="clearMeasure">🔁 Réinitialiser</li>
-      <li id="closeMeasure">❌ Fermer</li>
-    </ul>
-
-    <!-- Menu pour le suivi en temps reel -->
-    <!-- Modale de suivi de position -->
-    <div id="modalTrackingMessage" class="modal hidden" style="z-index: 1200;">
-      <div class="modal-content" style="padding: 15px; max-width: 300px; font-size: 14px; text-align:center;">
-        <span id="trackingMessageContent"></span>
-        <br>
-        <button id="closeTrackingMessageBtn" style="margin-top: 10px; padding: 5px 10px; cursor:pointer;">Fermer</button>
+    <!-- Modal de contact -->
+    <div id="contactModal" class="modal hidden">
+      <div class="modal-content">
+        <h3>Choisissez un mode de contact</h3>
+        <div class="button-group">
+          <button id="whatsappBtn"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+          <button id="emailBtn"><i class="fas fa-envelope"></i> Email</button>
+        </div>
+        <button id="closeModal" class="close-btn">Fermer</button>
       </div>
     </div>
 
 
-
-
     <!-- LIEN JavaScripts -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <!-- Lien avec les fichiers JavaScript -->
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="{{ url_for('static', filename='js/script.js')}}"></script>
-
-    
 
   </body>
 </html>

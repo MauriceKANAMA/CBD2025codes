@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", function () {
   L.control.scale({
     position: 'bottomleft',
     metric: true,      // Affiche l’échelle en mètres/kilomètres
-    imperial: true,   // Affiche les unités impériales (pieds/miles)
     maxWidth: 100     // Largeur max en pixels de l’échelle
   }).addTo(map);
 
@@ -33,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Fond de carte OSM et ESRI
   const Carto_Light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap & Carto &copy;Copyright 2025',
+    attribution: '&copy; OSM & Carto &copy;Copyright 2025',
     maxZoom: 22
   }).addTo(map);
 
@@ -48,53 +47,43 @@ document.addEventListener("DOMContentLoaded", function () {
     maxZoom: 22
   });
 
-  const Stadia_AlidadeSmoothDark = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.{ext}', {
-    minZoom: 0,
-    maxZoom: 22,
-    attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    ext: 'png'
-  });
-
-  // Sélection du fond de carte
-  basemapMenu.addEventListener("click", function () {
-    if (selectedLayer === "osm") {
-      map.removeLayer(Esri_WorldImagery);
-      map.addLayer(osm);
-    } else if (selectedLayer === "esri") {
-      map.removeLayer(osm);
-      map.addLayer(Esri_WorldImagery);
-    } else if (selectedLayer === "carto") {
-      map.removeLayer(osm);
-      map.removeLayer(Esri_WorldImagery);
-      map.addLayer(Carto_Light);
-    } else if (selectedLayer === "stadia") {
-      map.removeLayer(osm);
-      map.removeLayer(Esri_WorldImagery);
-      map.addLayer(Stadia_AlidadeSmoothDark);
-    }
-  });
-
   //AJOUT DE NOS COUCHES 
   //Chargement des données WFS GeoJSON pour l'inventaire et des WMS des autres couches
-  const Inventaire = "https://geoservercarto.duckdns.org/geoserver/CDB_Lushi_2025/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CDB_Lushi_2025%3AInventaire_complet&outputFormat=application%2Fjson&maxFeatures=2554";
-  
-  const buildingsLayer = L.tileLayer.wms("https://geoservercarto.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
-    layers: "CDB_Lushi_2025:BuildingsCBD",
-    format: "image/png",
-    transparent: true
-  });
+  //const Inventaire = "https://geoserver2.duckdns.org/geoserver/CDB_Lushi_2025/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CDB_Lushi_2025%3AInventaire_complet&outputFormat=application%2Fjson&maxFeatures=2554";
 
-  const limitesLayer = L.tileLayer.wms("https://geoservercarto.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
+  const limites = L.tileLayer.wms("https://geoserver2.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
     layers: "CDB_Lushi_2025:Limites2025",
     format: "image/png",
-    transparent: true
+    transparent: true,
+    maxZoom: 22
   });
 
-  const blocsLayer = L.tileLayer.wms("https://geoservercarto.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
+  const blocs = L.tileLayer.wms("https://geoserver2.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
     layers: "CDB_Lushi_2025:BlocsCBD",
     format: "image/png",
-    transparent: true
+    transparent: true,
+    maxZoom: 22
   });
+
+  const buildings = L.tileLayer.wms("https://geoserver2.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
+    layers: "CDB_Lushi_2025:BuildingsCBD",
+    format: "image/png",
+    transparent: true,
+    maxZoom: 22
+  });
+
+  // --- Contrôle de calques ---
+  const overlays = {
+    "Bâtiments": buildings,
+    "Blocs": blocs,
+    "Limites": limites
+  };
+
+  L.control.layers(null, overlays, {
+    title: 'Legende',
+    collapsed: true,
+    position: 'bottomright'
+  }).addTo(map);
 
 
   // Affichage du spinner lors du chargement des données
@@ -111,30 +100,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
   showSpinner(); // Spinner ON
 
-  // Ajout de la couche Inventaire
-  fetch(Inventaire)
+  // Ajout de la couche Inventaire sur base de notre methode GET API
+  fetch("/api/inventaire/geojson")
     .then(response => response.json())
     .then(data => {
       allFeatures = data.features;
 
-      mettreAJourSousCategories("Alimentation");
+      mettreAJourSousCategories("Hôtels - Restaurants - Cafés");
 
-      // Sélection automatique de la catégorie "Alimentation"
-      document.getElementById("categorie").value = "Alimentation";
-      afficherFeaturesFiltrées("Alimentation"); // Affichage auto de cette catégorie pour reduire le temps de chargement
+      // Sélection automatique de la catégorie "Hôtels - Restaurants - Cafés"
+      document.getElementById("categorie").value = "Hôtels - Restaurants - Cafés";
+      afficherFeaturesFiltrées("Hôtels - Restaurants - Cafés"); // Affichage auto d'une catégorie pour reduire le temps de chargement
 
     })
 
     .catch(error => {
-      console.error("Erreur lors du chargement WFS GeoJSON :", error);
+      console.error("Erreur lors du chargement de l'API Flask :", error);
     })
     .finally(() => {
       hideSpinner(); // Arrête du spinner
     });
 
 
-  // Fonction pour le filtrage des entités pour la selection par categorie et recherche par nom
-  function afficherFeaturesFiltrées(categorieFiltre, termeRecherche = "", sousCategorieFiltre = "") {
+    // Fonction pour le filtrage des entités pour la selection par categorie et recherche par nom
+    function afficherFeaturesFiltrées(categorieFiltre, termeRecherche = "", sousCategorieFiltre = "") {
 
     showSpinner(); // Debut du chargement
     markers.clearLayers();
@@ -217,13 +206,14 @@ document.addEventListener("DOMContentLoaded", function () {
     hideSpinner(); // Fin du chargement
   }
 
+  //Recherche selon les noms d etablisement et avenues
   function mettreAJourListeResultats(termeRecherche, categorieFiltre) {
     const resultList = document.getElementById("searchResults");
     resultList.innerHTML = ""; // vide la liste
 
     let resultats = allFeatures;
 
-    if (categorieFiltre && categorieFiltre !== "-- Choisir une catégorie --") {
+    if (categorieFiltre && categorieFiltre !== "Choisissez une catégorie") {
       resultats = resultats.filter(f => f.properties.categories === categorieFiltre);
     }
 
@@ -235,17 +225,16 @@ document.addEventListener("DOMContentLoaded", function () {
           (props.nom_etabli && props.nom_etabli.toLowerCase().includes(terme)) ||
           (props.adresses && props.adresses.toLowerCase().includes(terme)) ||
           (props.description && props.description.toLowerCase().includes(terme)) ||
-          (props.sous_categ && props.sous_categ.toLowerCase().includes(terme)) ||
-          (props.types_rubr && props.types_rubr.toLowerCase().includes(terme)) ||
-          (props.categories && props.categories.toLowerCase().includes(terme))
+          (props.types_rubr && props.types_rubr.toLowerCase().includes(terme))
         );
       });
     }
 
-    // Afficher les 5 premiers résultats max
-    resultats.slice(0, 5).forEach(feature => {
+    // Afficher les 10 premiers résultats max
+    resultats.slice(0, 10).forEach(feature => {
       const li = document.createElement("li");
       li.textContent = feature.properties.nom_etabli || "Inconnu";
+      li.textContent = feature.properties.adresses || "Inconnue";
       li.addEventListener("click", () => {
         const coords = feature.geometry.coordinates;
         const latlng = L.latLng(coords[1], coords[0]);
@@ -361,7 +350,6 @@ document.addEventListener("DOMContentLoaded", function () {
       map.removeLayer(osm);
       map.removeLayer(Esri_WorldImagery);
       map.removeLayer(Carto_Light);
-      map.removeLayer(Stadia_AlidadeSmoothDark);
 
       // Ajouter le fond sélectionné
       if (selectedLayer === "osm") {
@@ -370,8 +358,6 @@ document.addEventListener("DOMContentLoaded", function () {
         map.addLayer(Esri_WorldImagery);
       } else if (selectedLayer === "carto") {
         map.addLayer(Carto_Light);
-      } else if (selectedLayer === "stadia") {
-        map.addLayer(Stadia_AlidadeSmoothDark);
       }
 
       // Masquer le menu après sélection
@@ -392,6 +378,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
   document.getElementById("zoomOut").addEventListener("click", function () {
     map.zoomOut();
+  });
+
+  // Initialise le dessin (mais on l'active seulement au clic)
+  const drawControl = new L.Draw.Rectangle(map, {
+    shapeOptions: {
+      color: '#f06eaa',
+      weight: 2,
+    }
+  });
+
+  document.getElementById('zoomSelectBtn').onclick = () => {
+    drawControl.enable();
+  };
+
+  // Quand le rectangle est dessiné, zoom sur cette zone
+  map.on(L.Draw.Event.CREATED, function (e) {
+    const layer = e.layer;
+    const bounds = layer.getBounds();
+    map.fitBounds(bounds);
+    drawControl.disable();
   });
 
   // ZOOM ÉTENDU - Corrigé
@@ -479,18 +485,91 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  document.getElementById("measureDistanceBtn").addEventListener("click", function() {
+    if (!measureControl) {
+      measureControl = new L.Draw.Polyline(map, {
+        shapeOptions: {
+          color: 'red',
+          weight: 4
+        }
+      });
+    }
+    measureControl.enable();
+  });
+
+  const measureModal = document.getElementById("measureModal");
+  const distanceTextEl = document.getElementById("distanceText");
+  const deleteMeasureBtn = document.getElementById("deleteMeasureBtn");
+  const closeMeasureBtn = document.getElementById("closeMeasureBtn");
+
+  let currentMeasureLayer = null;
+
+  map.on(L.Draw.Event.CREATED, function (e) {
+    if (e.layerType === 'polyline') {
+      if (currentMeasureLayer) {
+        map.removeLayer(currentMeasureLayer);  // Supprime ancienne mesure si existante
+      }
+
+      currentMeasureLayer = e.layer;
+      map.addLayer(currentMeasureLayer);
+
+      const latlngs = currentMeasureLayer.getLatLngs();
+      let totalDistance = 0;
+      for (let i = 0; i < latlngs.length - 1; i++) {
+        totalDistance += latlngs[i].distanceTo(latlngs[i + 1]);
+      }
+
+      const distanceText = totalDistance >= 1000
+        ? (totalDistance / 1000).toFixed(2) + " km"
+        : Math.round(totalDistance) + " m";
+
+      distanceTextEl.textContent = `Distance : ${distanceText}`;
+
+      // Affiche la modale
+      measureModal.classList.remove("hidden");
+    }
+  });
+
+  deleteMeasureBtn.onclick = function () {
+    if (currentMeasureLayer) {
+      map.removeLayer(currentMeasureLayer);
+      currentMeasureLayer = null;
+    }
+    measureModal.classList.add("hidden");
+  };
+
+  closeMeasureBtn.onclick = function () {
+    measureModal.classList.add("hidden");
+  };
+
 
 
   document.querySelector('.Contact').addEventListener('click', function () {
-    // Remplace par ton adresse email
+    document.getElementById('contactModal').classList.remove('hidden');
+  });
+
+  // Fermer la modal
+  document.getElementById('closeModal').addEventListener('click', function () {
+    document.getElementById('contactModal').classList.add('hidden');
+  });
+
+  // WhatsApp
+  document.getElementById('whatsappBtn').addEventListener('click', function () {
+    const numero = "+243972860597";
+    const message = encodeURIComponent("Bonjour, je vous contacte au sujet de votre application web SIG du centre des affaires de Lubumbashi.");
+    const whatsappURL = `https://wa.me/${numero}?text=${message}`;
+    window.open(whatsappURL, "_blank");
+    document.getElementById('contactModal').classList.add('hidden');
+  });
+
+  // Email
+  document.getElementById('emailBtn').addEventListener('click', function () {
     const email = 'mauricekanama1@email.com';
     const subject = encodeURIComponent('Demande de contact');
     const body = encodeURIComponent('Bonjour,\n\nJe souhaite entrer en contact avec vous concernant votre application web SIG du centre des affaires de Lubumbashi.');
-
-      // Crée une URL mailto
-      const mailtoUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;
-
-      // Ouvre Gmail dans un nouvel onglet
-      window.open(mailtoUrl, '_blank');
+    const mailtoUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}&body=${body}`;
+    window.open(mailtoUrl, '_blank');
+    document.getElementById('contactModal').classList.add('hidden');
   });
+
 });
