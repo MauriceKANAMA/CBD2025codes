@@ -1,12 +1,10 @@
 from flask import Flask, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from geoalchemy2 import Geometry
-from geoalchemy2.shape import from_shape, to_shape
-from shapely.geometry import shape, Point
+from geoalchemy2.shape import to_shape
 from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_caching import Cache
-import requests
 import os
 
 load_dotenv()
@@ -15,17 +13,16 @@ app = Flask(__name__)
 CORS(app)
 
 # Configuration du cache
-app.config['CACHE_TYPE'] = 'simple'  # Tu peux aussi utiliser 'filesystem' ou 'redis'
-app.config['CACHE_DEFAULT_TIMEOUT'] = 300  # 5 minutes (en secondes)
+app.config['CACHE_TYPE'] = 'simple'
+app.config['CACHE_DEFAULT_TIMEOUT'] = 300
 cache = Cache(app)
-
 
 # Configuration de la base de données
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# Definition de la classe Inventaire dans la base de donnees
+# Définition de la classe Inventaire
 class Inventaire(db.Model):
     __tablename__ = 'Inventaire_complet'
     id = db.Column('id', db.Integer, primary_key=True)
@@ -44,7 +41,7 @@ def serialize_inventaire(obj):
     return {
         'id': obj.id,
         'geom': {'lat': point.y, 'lng': point.x},
-        'Nilots': obj.N_ilots,
+        'Nilots': obj.Nilots,
         'NomEtabliss': obj.NomEtabliss,
         'Categorie': obj.Categorie,
         'Sous_categorie': obj.Sous_categorie,
@@ -54,7 +51,7 @@ def serialize_inventaire(obj):
         'Date': obj.Date
     }
 
-# Creation des routes Rest GET pour l'inventaire
+# Routes REST GET
 @app.route('/api/inventaire', methods=['GET'])
 def get_all_inventaire():
     items = Inventaire.query.all()
@@ -81,10 +78,10 @@ def get_geojson():
                 "id": item.id,
                 "nom_etabli": item.NomEtabliss,
                 "categories": item.Categorie,
-                "sous_categ": item.SousCategorie,
-                "types_rubr": item.TypesRubrique,
+                "sous_categ": item.Sous_categorie,
+                "types_rubr": item.Rubriques,
                 "descriptio": item.Description,
-                "adresses": item.Adresse
+                "adresses": item.Avenue
             }
         })
     return jsonify({
@@ -92,15 +89,14 @@ def get_geojson():
         "features": features
     })
 
-
 # Route pour la page d'accueil
 @app.route('/')
 def homePage():
     return render_template('index.html')
 
+# if __name__ == '__main__':
+#     app.run(debug=True)
+
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
-# if __name__ == '__main__':
-#     app.run(debug=True)
