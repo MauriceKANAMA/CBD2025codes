@@ -38,12 +38,6 @@ body, html {
   color: white;
 }
 
-.topbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 /* Modal de contact */
 .modal {
   position: fixed;
@@ -196,6 +190,7 @@ body, html {
 /* Parametre de la barre de haut */
 .topbar {
   position: absolute;
+  gap: 10px;
   top: 10px;
   left: 45px;
   height: 50px;

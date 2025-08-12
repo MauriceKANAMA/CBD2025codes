@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="description" content="Carte interactive du Centre des affaires de Lubumbashi (CBD Lubumbashi) : explorez les commerces, services et points d’intérêt de la ville.">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Titre de l'application web SIG -->
     <title>Centre des affaires de Lubumbashi</title>
@@ -26,7 +26,7 @@
     <!-- BARRE HORIZONTAL EN HAUT -->
 
     <!--Affichage de la barre de haut-->
-    <section class="topbar">
+    <section class="topbar" role="banner">
       <img src="{{ url_for('static', filename='images/favicon.png') }}" alt="Logo" class="favicon-icon">
       <h2 class="name">Centre des affaires de Lubumbashi</h2>
       <button class="Contact">Contact</button>
@@ -34,7 +34,7 @@
 
 
     <!--Affichage de la carte-->
-    <main></main>
+    <main role="Carte principale">
       <div id="map"></div>
     </main>
 
@@ -47,8 +47,8 @@
 
 
     <!--Menu de gauche-->
-    <section class="sidebar">
-      <h3><strong>Catégories</strong></h3>
+    <section class="sidebar" role="navigation" aria-label="Menu de filtres">
+      <label for="categorie"><h3><strong>Catégories</strong></h3></label>
       <select id="categorie" name="categorie">
         <option value="" selected>Choisissez une catégorie</option>
         <option value="Alimentation">Alimentations</option>
@@ -60,7 +60,7 @@
       </select>
 
       <!--Affichage de la liste des sous-catégories-->
-      <h3><strong>Sous-catégories</strong></h3>
+      <label for="sousCategorie"><h3><strong>Sous-catégories</strong></h3></label>
       <select id="sousCategorie" name="sousCategorie">
         <option value="" selected>Choisissez une sous-catégorie</option>
       </select>
@@ -83,44 +83,33 @@
 
     <!-- SIDEBAR DE DROITE -->
 
-    <section class="right-tools" id="rightSidebar">
+    <section class="right-tools" id="rightSidebar" role="complementary" aria-label="Outils de carte">
       <div class="right-content">
         
         <!-- Boutons de zoom -->
         <div class="zoom-controls">
-          <button id="zoomIn" title="zoom avant"><i class="fas fa-plus"></i></button>
-          <button id="zoomExtentBtn" title="Vue d'ensemble"><i class="fas fa-home"></i></button>
-          <button id="zoomOut" title="zoom arrière"><i class="fas fa-minus"></i></button>
-          <button id="zoomSelectBtn" title="Zoom sur sélection"><i class="fas fa-pen-to-square"></i></button>
-          <button id="measureDistanceBtn" title="Mesurer une distance"><i class="fas fa-ruler"></i></button>
+          <button id="zoomIn" title="zoom avant" aria-label="Zoom avant"><i class="fas fa-plus"></i></button>
+          <button id="zoomExtentBtn" title="Vue d'ensemble" aria-label="Vue d'ensemble"><i class="fas fa-home"></i></button>
+          <button id="zoomOut" title="zoom arrière" aria-label="Zoom arrière"><i class="fas fa-minus"></i></button>
+          <button id="zoomSelectBtn" title="Zoom sur sélection" aria-label="Zoom sur sélection"><i class="fas fa-pen-to-square"></i></button>
+          <button id="measureDistanceBtn" title="Mesurer une distance" aria-label="Mesurer une distance"><i class="fas fa-ruler"></i></button>
         </div>
 
 
         <!-- Boutons des fonds des cartes -->
         <div class="basemap-switcher">
-          <button id="baseLayerBtn" title="Changer le fond de carte"><i class="fas fa-globe"></i></button>
+          <button id="baseLayerBtn" aria-expanded="false" aria-controls="basemapMenu" aria-label="Changer le fond de carte">
+            <i class="fas fa-globe"></i>
+          </button>
           <ul id="basemapMenu" class="basemap-menu hidden">
-            <li data-layer="osm">OpenStreetMap</li>
-            <li data-layer="esri">ESRI Satellite</li>
-            <li data-layer="carto">Carto Light</li>
+            <li role="menuitem" tabindex="0" data-layer="osm">OpenStreetMap</li>
+            <li role="menuitem" tabindex="0" data-layer="esri">ESRI Satellite</li>
+            <li role="menuitem" tabindex="0" data-layer="carto">Carto Light</li>
           </ul>
         </div>
 
         <!-- Ma position -->
         <button id="locateBtn" class="btn-inactive" title="Activer ma position" aria-label="Activer ma position">📡</button>
-
-        <!-- Mesure de distance -->
-        <div id="measureModal" class="modal hidden">
-          <div class="modal-content">
-            <h3>Mesure de distance</h3>
-            <p id="distanceText">Distance : --</p>
-            <div class="button-group">
-              <!-- Bouton Mesure distance -->
-              <button id="deleteMeasureBtn">Supprimer</button>
-              <button id="closeMeasureBtn">Fermer</button>
-            </div>
-          </div>
-        </div>
 
       </div>
     </section>
@@ -131,7 +120,7 @@
     </div>
 
     <!-- Modal de contact -->
-    <div id="contactModal" class="modal hidden">
+    <div id="contactModal" class="modal hidden" role="dialog" aria-labelledby="contactTitle" aria-modal="true">
       <div class="modal-content">
         <h3>Choisissez un mode de contact</h3>
         <div class="button-group">
@@ -142,8 +131,22 @@
       </div>
     </div>
 
+    <!-- Modal de mesure de distance -->
+    <div id="measureModal" class="modal hidden" role="dialog" aria-labelledby="measureTitle" aria-modal="true">
+      <div class="modal-content">
+        <h3>Mesure de distance</h3>
+        <p id="distanceText">Distance : --</p>
+        <div class="button-group">
+          <!-- Bouton Mesure distance -->
+          <button id="deleteMeasureBtn">Supprimer</button>
+          <button id="closeMeasureBtn">Fermer</button>
+        </div>
+      </div>
+    </div>
+
 
     <!-- LIEN JavaScripts -->
+    <script src="https://unpkg.com/leaflet.glify@3.3.1/dist/glify-browser.js"></script>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="{{ url_for('static', filename='js/script.js')}}"></script>

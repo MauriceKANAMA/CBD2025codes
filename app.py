@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template
+from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import to_shape
@@ -54,14 +54,18 @@ def serialize_inventaire(obj):
 # Routes REST GET
 @app.route('/api/inventaire', methods=['GET'])
 def get_all_inventaire():
-    items = Inventaire.query.all()
-    return jsonify([serialize_inventaire(item) for item in items])
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    items = Inventaire.query.paginate(page=page, per_page=per_page, error_out=False)
+    return jsonify([serialize_inventaire(item) for item in items.items])
+
 
 @app.route('/api/inventaire/<int:item_id>', methods=['GET'])
 def get_inventaire(item_id):
     item = Inventaire.query.get_or_404(item_id)
     return jsonify(serialize_inventaire(item))
 
+@cache.cached(timeout=300)
 @app.route('/api/inventaire/geojson', methods=['GET'])
 def get_geojson():
     items = Inventaire.query.all()
@@ -94,9 +98,9 @@ def get_geojson():
 def homePage():
     return render_template('index.html')
 
-# if __name__ == '__main__':
-#     app.run(debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
 
-if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+# if __name__ == "__main__":
+#     port = int(os.environ.get('PORT', 5000))
+#     app.run(host='0.0.0.0', port=port)

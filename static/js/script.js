@@ -97,8 +97,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   let allFeatures = []; // Pour stocker toutes les entités initiales
   let markers = L.layerGroup(); // Cluster global
+  let measureControl = null; // Pour le contrôle de mesure
 
   showSpinner(); // Spinner ON
+
+  // Déclaration des éléments DOM utilisés dans les fonctions
+  let sousCategorieSelect = document.getElementById("sousCategorie");
 
   // Ajout de la couche Inventaire sur base de notre methode GET API
   fetch("/api/inventaire/geojson")
@@ -124,87 +128,111 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Fonction pour le filtrage des entités pour la selection par categorie et recherche par nom
     function afficherFeaturesFiltrées(categorieFiltre, termeRecherche = "", sousCategorieFiltre = "") {
+      showSpinner(); // Debut du chargement
+      // Remove existing layers
+      markers.clearLayers();
+      
+      // Remove existing glify layer if it exists
+      if (window.currentGlLayer) {
+        window.currentGlLayer.remove();
+        window.currentGlLayer = null;
+      }
 
-    showSpinner(); // Debut du chargement
-    markers.clearLayers();
+      let dataFiltrée = allFeatures;
 
-    let dataFiltrée = allFeatures;
+      // Filtrage par catégorie
+      if (categorieFiltre && categorieFiltre !== "Choisissez une catégorie") {
+        dataFiltrée = dataFiltrée.filter(f => f.properties.categories === categorieFiltre);
+      }
 
-    // Filtrage par catégorie
-    if (categorieFiltre && categorieFiltre !== "Choisissez une catégorie") {
-      dataFiltrée = dataFiltrée.filter(f => f.properties.categories === categorieFiltre);
-    }
+      // Filtrage par sous-catégorie
+      if (sousCategorieFiltre && sousCategorieFiltre !== "Choisissez une sous-catégorie") {
+        dataFiltrée = dataFiltrée.filter(f => f.properties.sous_categ === sousCategorieFiltre);
+      }
 
-    // Filtrage par sous-catégorie
-    if (sousCategorieFiltre && sousCategorieFiltre !== "Choisissez une sous-catégorie") {
-      dataFiltrée = dataFiltrée.filter(f => f.properties.sous_categ === sousCategorieFiltre);
-    }
-
-
-    // Filtrage par nom, avenue, rubriques et descriptions
-    if (termeRecherche) {
-      const terme = termeRecherche.toLowerCase();
-      dataFiltrée = dataFiltrée.filter(f => {
-        const props = f.properties;
-        return (
-          (props.nom_etabli && props.nom_etabli.toLowerCase().includes(terme)) ||
-          (props.adresses && props.adresses.toLowerCase().includes(terme)) ||
-          (props.description && props.description.toLowerCase().includes(terme)) ||
-          (props.sous_categ && props.sous_categ.toLowerCase().includes(terme)) ||
-          (props.types_rubr && props.types_rubr.toLowerCase().includes(terme))
-        );
-      });
-    }
-
-    const coucheGeoJSON = L.geoJSON(dataFiltrée, {
-      onEachFeature: function (feature, layer) {
-        if (feature.properties) {
-          const nom = feature.properties.nom_etabli || "Inconnu";
-          const categorie = feature.properties.categories || "Non définie";
-          const sousCategorie = feature.properties.sous_categ || "Non définie";
-          const Rubrique = feature.properties.types_rubr || "Non définie";
-          const description = feature.properties.descriptio || "Aucune description";
-          const adresse = feature.properties.adresses || "Aucune adresse disponible";
-
-          layer.bindPopup(
-            `<div class="custom-popup">
-                <h3><i class="fas fa-store"></i> ${nom}</h3>
-                <p><strong>Catégorie :</strong> ${categorie}</p>
-                <p><strong>Sous-catégorie :</strong> ${sousCategorie}</p>
-                <p><strong>Rubrique :</strong> ${Rubrique}</p>
-                <p><strong>Description :</strong> ${description}</p>
-                <p><strong>Adresse :</strong> Avenue ${adresse}</p>
-            </div>`
+      // Filtrage par nom, avenue, rubriques et descriptions
+      if (termeRecherche) {
+        const terme = termeRecherche.toLowerCase();
+        dataFiltrée = dataFiltrée.filter(f => {
+          const props = f.properties;
+          return (
+            (props.nom_etabli && props.nom_etabli.toLowerCase().includes(terme)) ||
+            (props.adresses && props.adresses.toLowerCase().includes(terme)) ||
+            (props.description && props.description.toLowerCase().includes(terme)) ||
+            (props.sous_categ && props.sous_categ.toLowerCase().includes(terme)) ||
+            (props.types_rubr && props.types_rubr.toLowerCase().includes(terme))
           );
-
-
-          layer.on("click", function () {
-            const popup = L.popup()
-          });
-        }
-      },
-      pointToLayer: function (feature, latlng) {
-        return L.marker(latlng, {
-          icon: L.icon({
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-            shadowSize: [41, 41]
-          })
         });
       }
-    });
 
-    markers.addLayer(coucheGeoJSON);
-    map.addLayer(markers);
+      // Convert data to glify format
+      const glifyData = dataFiltrée.map(feature => {
+        return [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]; // lat, lng
+      });
 
-    markers.addLayer(coucheGeoJSON);
-    map.addLayer(markers);
+      // Create new glify layer if we have data to display
+      if (glifyData.length > 0) {
+        window.currentGlLayer = L.glify.points({
+          data: glifyData,
+          map: map,
+          click: function (e, point, xy) {
+            // Handle click events for displaying popups
+            // Find the feature that corresponds to this point
+            const lat = point[0];
+            const lng = point[1];
+            
+            // Find the feature in dataFiltrée that matches this point
+            const feature = dataFiltrée.find(f =>
+              f.geometry.coordinates[1] === lat && f.geometry.coordinates[0] === lng
+            );
+            
+            if (feature) {
+              const props = feature.properties;
+              const nom = props.nom_etabli || "Inconnu";
+              const categorie = props.categories || "Non définie";
+              const sousCategorie = props.sous_categ || "Non définie";
+              const Rubrique = props.types_rubr || "Non définie";
+              const description = props.descriptio || "Aucune description";
+              const adresse = props.adresses || "Aucune adresse disponible";
+              
+              // Create popup content
+              const popupContent = `
+                <div class="custom-popup">
+                  <h3><i class="fas fa-store"></i> ${nom}</h3>
+                  <p><strong>Catégorie :</strong> ${categorie}</p>
+                  <p><strong>Sous-catégorie :</strong> ${sousCategorie}</p>
+                  <p><strong>Rubrique :</strong> ${Rubrique}</p>
+                  <p><strong>Description :</strong> ${description}</p>
+                  <p><strong>Adresse :</strong> Avenue ${adresse}</p>
+                </div>
+              `;
+              
+              // Create a popup at the clicked location
+              L.popup()
+                .setLatLng([lat, lng])
+                .setContent(popupContent)
+                .openOn(map);
+            }
+          },
+          // Customize the appearance of points
+          color: function(index, point) {
+            // You can customize colors based on categories or other properties
+            return {
+              r: 0,
+              g: 100,
+              b: 200,
+              a: 0.8
+            };
+          },
+          size: 10 // Point size in pixels
+        });
+      }
 
-    hideSpinner(); // Fin du chargement
-  }
+      // Add the layer to the map
+      // Note: glify layers are automatically added to the map
+      
+      hideSpinner(); // Fin du chargement
+    }
 
   //Recherche selon les noms d etablisement et avenues
   function mettreAJourListeResultats(termeRecherche, categorieFiltre) {
@@ -233,8 +261,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Afficher les 10 premiers résultats max
     resultats.slice(0, 10).forEach(feature => {
       const li = document.createElement("li");
-      li.textContent = feature.properties.nom_etabli || "Inconnu";
-      li.textContent = feature.properties.adresses || "Inconnue";
+      li.textContent = `${feature.properties.nom_etabli || "Inconnu"} - ${feature.properties.adresses || "Inconnue"}`;
       li.addEventListener("click", () => {
         const coords = feature.geometry.coordinates;
         const latlng = L.latLng(coords[1], coords[0]);
@@ -259,7 +286,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Ajout de la selection a partir des sous categories de la categorie principale
-  const sousCategorieSelect = document.getElementById("sousCategorie");
 
   function mettreAJourSousCategories(categorie) {
     const sousCategories = new Set();
@@ -364,10 +390,6 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("basemapMenu").classList.add("hidden");
     }
   });
-
-
-  
-
 
 
   // SCRIPTS DE LA BARRE DE DROITE
@@ -541,8 +563,6 @@ document.addEventListener("DOMContentLoaded", function () {
   closeMeasureBtn.onclick = function () {
     measureModal.classList.add("hidden");
   };
-
-
 
   document.querySelector('.Contact').addEventListener('click', function () {
     document.getElementById('contactModal').classList.remove('hidden');
