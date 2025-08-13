@@ -85,21 +85,9 @@ document.addEventListener("DOMContentLoaded", function () {
     position: 'bottomright'
   }).addTo(map);
 
-
-  // Affichage du spinner lors du chargement des données
-  function showSpinner() {
-    document.getElementById("spinner").classList.remove("hidden");
-  }
-
-  function hideSpinner() {
-    document.getElementById("spinner").classList.add("hidden");
-  }
-
   let allFeatures = []; // Pour stocker toutes les entités initiales
   let markers = L.layerGroup(); // Cluster global
   let measureControl = null; // Pour le contrôle de mesure
-
-  showSpinner(); // Spinner ON
 
   // Déclaration des éléments DOM utilisés dans les fonctions
   let sousCategorieSelect = document.getElementById("sousCategorie");
@@ -121,14 +109,9 @@ document.addEventListener("DOMContentLoaded", function () {
     .catch(error => {
       console.error("Erreur lors du chargement de l'API Flask :", error);
     })
-    .finally(() => {
-      hideSpinner(); // Arrête du spinner
-    });
-
 
     // Fonction pour le filtrage des entités pour la selection par categorie et recherche par nom
     function afficherFeaturesFiltrées(categorieFiltre, termeRecherche = "", sousCategorieFiltre = "") {
-      showSpinner(); // Debut du chargement
       // Remove existing layers
       markers.clearLayers();
       
@@ -227,11 +210,6 @@ document.addEventListener("DOMContentLoaded", function () {
           size: 10 // Point size in pixels
         });
       }
-
-      // Add the layer to the map
-      // Note: glify layers are automatically added to the map
-      
-      hideSpinner(); // Fin du chargement
     }
 
   //Recherche selon les noms d etablisement et avenues
