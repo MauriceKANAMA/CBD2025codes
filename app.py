@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import and_
+from sqlalchemy import func, and_
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import to_shape
 from geoalchemy2.functions import ST_MakeEnvelope, ST_Transform
@@ -72,14 +72,25 @@ def get_inventaire(item_id):
     item = Inventaire.query.get_or_404(item_id)
     return jsonify(serialize_inventaire(item))
 
-@cache.cached(timeout=300)
 @app.route('/api/inventaire/geojson', methods=['GET'])
+@cache.cached(timeout=300)
 def get_geojson():
     try:
         categorie_filter = request.args.get('categorie')
         bbox_param = request.args.get('bbox')  # format: minx,miny,maxx,maxy
 
-        query = Inventaire.query
+        # Requête optimisée (sélectionne uniquement les colonnes utiles)
+        query = db.session.query(
+            Inventaire.id,
+            Inventaire.NomEtabliss,
+            Inventaire.Categorie,
+            Inventaire.Sous_categorie,
+            Inventaire.Rubriques,
+            Inventaire.Description,
+            Inventaire.Avenue,
+            func.ST_X(Inventaire.geom).label('lon'),
+            func.ST_Y(Inventaire.geom).label('lat')
+        ).filter(Inventaire.geom != None)
 
         if categorie_filter:
             query = query.filter(Inventaire.Categorie.ilike(f"%{categorie_filter}%"))
@@ -88,24 +99,20 @@ def get_geojson():
             try:
                 minx, miny, maxx, maxy = map(float, bbox_param.split(','))
                 bbox_geom = ST_MakeEnvelope(minx, miny, maxx, maxy, 4326)
-                query = query.filter(Inventaire.geom != None)
                 query = query.filter(Inventaire.geom.ST_Within(bbox_geom))
             except ValueError:
                 return jsonify({"error": "Paramètre bbox mal formé. Utilise : bbox=minx,miny,maxx,maxy"}), 400
 
         items = query.all()
 
+        # Construire la collection GeoJSON
         features = []
         for item in items:
-            if not item.geom:
-                continue
-
-            point = to_shape(item.geom)
             features.append({
                 "type": "Feature",
                 "geometry": {
                     "type": "Point",
-                    "coordinates": [point.x, point.y]
+                    "coordinates": [item.lon, item.lat]
                 },
                 "properties": {
                     "id": item.id,
@@ -126,6 +133,14 @@ def get_geojson():
     except Exception as e:
         print(f"[ERREUR API GEOJSON] {e}")
         return jsonify({"error": "Erreur interne du serveur"}), 500
+    
+# API pour les statistiques des donnees
+@app.route('/api/inventaire/stats', methods=['GET'])
+def get_stats():
+    results = db.session.query(Inventaire.Categorie, func.count(Inventaire.id)).group_by(Inventaire.Categorie).all()
+    stats = [{"categorie": row[0], "count": row[1]} for row in results]
+    return jsonify(stats)
+
 
 
 # Route pour la page d'accueil

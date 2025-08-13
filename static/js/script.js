@@ -1,89 +1,40 @@
 document.addEventListener("DOMContentLoaded", function () {
-  // Ajout de la position de notre carte sur notre page (GetMap)
   const map = L.map('map', {
     editable: true,
-    zoomControl: false // Désactivation des boutons zoom par défaut
+    zoomControl: false
   }).setView([-11.6645, 27.484], 15.4);
 
-   // Ajout de l'echelle de zoom de la carte
-  L.control.scale({
-    position: 'bottomleft',
-    metric: true,      // Affiche l’échelle en mètres/kilomètres
-    maxWidth: 100     // Largeur max en pixels de l’échelle
-  }).addTo(map);
+  L.control.scale({ position: 'bottomleft', metric: true, maxWidth: 100 }).addTo(map);
 
-  const positionInitiale = {
-    coords: [-11.6645, 27.484],
-    zoom: 15.4
-  };
-
-
-  // GESTION DE LA BARRE GAUCHE
+  const positionInitiale = { coords: [-11.6645, 27.484], zoom: 15.4 };
   const toggleButton = document.querySelector('.toggle-sidebar');
   const sidebar = document.querySelector('.sidebar');
-
-  // Cacher la sidebar au chargement
   sidebar.classList.add('hidden');
+  toggleButton.addEventListener('click', () => sidebar.classList.toggle('hidden'));
 
-  // Gérer l'affichage lors du clic
-  toggleButton.addEventListener('click', function () {
-    sidebar.classList.toggle('hidden');
-  });
-
-  // Fond de carte OSM et ESRI
   const Carto_Light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OSM & Carto &copy;Copyright 2025',
-    maxZoom: 22
+    attribution: '&copy; OSM & Carto &copy;2025', maxZoom: 22
   }).addTo(map);
-
-  const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', 
-    {foo: 'bar', 
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy;Copyright 2025',
-    maxZoom: 22
+  const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {
+    foo: 'bar', attribution: '&copy; OpenStreetMap &copy;2025', maxZoom: 22
   });
-
   const Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: '&copy; Esri the GIS User Community &copy;Copyright 2025',
-    maxZoom: 22
+    attribution: '&copy; Esri &copy;2025', maxZoom: 22
   });
 
-  //AJOUT DE NOS COUCHES 
-  //Chargement des données WFS GeoJSON pour l'inventaire et des WMS des autres couches
-  //const Inventaire = "https://geoserver2.duckdns.org/geoserver/CDB_Lushi_2025/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=CDB_Lushi_2025%3AInventaire_complet&outputFormat=application%2Fjson&maxFeatures=2554";
-
-  const limites = L.tileLayer.wms("https://geoserver2.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
-    layers: "CDB_Lushi_2025:Limites2025",
-    format: "image/png",
-    transparent: true,
-    maxZoom: 22
-  });
-
-  const blocs = L.tileLayer.wms("https://geoserver2.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
-    layers: "CDB_Lushi_2025:BlocsCBD",
-    format: "image/png",
-    transparent: true,
-    maxZoom: 22
-  });
-
-  const buildings = L.tileLayer.wms("https://geoserver2.duckdns.org/geoserver/CDB_Lushi_2025/wms", {
-    layers: "CDB_Lushi_2025:BuildingsCBD",
-    format: "image/png",
-    transparent: true,
-    maxZoom: 22
-  });
-
-  // --- Contrôle de calques ---
   const overlays = {
-    "Bâtiments": buildings,
-    "Blocs": blocs,
-    "Limites": limites
+    "Bâtiments": L.tileLayer.wms("...BuildingsCBD"),
+    "Blocs": L.tileLayer.wms("...BlocsCBD"),
+    "Limites": L.tileLayer.wms("...Limites2025")
   };
+  L.control.layers(null, overlays, { collapsed: true, position: 'bottomright' }).addTo(map);
 
-  L.control.layers(null, overlays, {
-    title: 'Legende',
-    collapsed: true,
-    position: 'bottomright'
-  }).addTo(map);
+
+  // AJOUT DES COUCHES VECTORIELLES
+
+
+
+
 
   let allFeatures = []; // Pour stocker toutes les entités initiales
   let markers = L.layerGroup(); // Cluster global
@@ -109,7 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
     .catch(error => {
       console.error("Erreur lors du chargement de l'API Flask :", error);
     })
-
+    
     // Fonction pour le filtrage des entités pour la selection par categorie et recherche par nom
     function afficherFeaturesFiltrées(categorieFiltre, termeRecherche = "", sousCategorieFiltre = "") {
       // Remove existing layers
@@ -171,43 +122,30 @@ document.addEventListener("DOMContentLoaded", function () {
             
             if (feature) {
               const props = feature.properties;
-              const nom = props.nom_etabli || "Inconnu";
-              const categorie = props.categories || "Non définie";
-              const sousCategorie = props.sous_categ || "Non définie";
-              const Rubrique = props.types_rubr || "Non définie";
-              const description = props.descriptio || "Aucune description";
-              const adresse = props.adresses || "Aucune adresse disponible";
-              
               // Create popup content
               const popupContent = `
                 <div class="custom-popup">
-                  <h3><i class="fas fa-store"></i> ${nom}</h3>
-                  <p><strong>Catégorie :</strong> ${categorie}</p>
-                  <p><strong>Sous-catégorie :</strong> ${sousCategorie}</p>
-                  <p><strong>Rubrique :</strong> ${Rubrique}</p>
-                  <p><strong>Description :</strong> ${description}</p>
-                  <p><strong>Adresse :</strong> Avenue ${adresse}</p>
+                  <h3><i class="fas fa-store"></i> ${props.nom_etabli || "Inconnu"}</h3>
+                  <p><strong>Catégorie :</strong> ${props.categories || "Non définie"}</p>
+                  <p><strong>Sous-catégorie :</strong> ${props.sous_categ || "Non définie"}</p>
+                  <p><strong>Rubrique :</strong> ${props.types_rubr || "Non définie"}</p>
+                  <p><strong>Description :</strong> ${props.description || "Aucune description"}</p>
+                  <p><strong>Adresse :</strong> Avenue ${props.adresses || "Aucune adresse disponible"}</p>
                 </div>
               `;
-              
-              // Create a popup at the clicked location
-              L.popup()
-                .setLatLng([lat, lng])
-                .setContent(popupContent)
-                .openOn(map);
+              L.popup().setLatLng([lat, lng]).setContent(popupContent).openOn(map);
             }
           },
-          // Customize the appearance of points
+          size: 13, // plus gros point
+          opacity: 1.0,
           color: function(index, point) {
-            // You can customize colors based on categories or other properties
             return {
               r: 0,
-              g: 100,
-              b: 200,
-              a: 0.8
+              g: 0,
+              b: 255,
+              a: 1 // pleine opacité
             };
-          },
-          size: 10 // Point size in pixels
+          }
         });
       }
     }
@@ -341,6 +279,13 @@ document.addEventListener("DOMContentLoaded", function () {
     mettreAJourSousCategories("");
   });
 
+
+
+
+  // FIN D AJOUT DES DONNEES
+  
+
+
   // Basemap switching logic
   document.getElementById("baseLayerBtn").addEventListener("click", function () {
     document.getElementById("basemapMenu").classList.toggle("hidden");
@@ -371,6 +316,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
   // SCRIPTS DE LA BARRE DE DROITE
+
+
   // Gérer les boutons zoom
   document.getElementById("zoomIn").addEventListener("click", function () {
     map.zoomIn();
@@ -484,6 +431,9 @@ document.addEventListener("DOMContentLoaded", function () {
       locateBtn.textContent = "📡";
     }
   });
+
+  // Mesure de distance
+  
 
   document.getElementById("measureDistanceBtn").addEventListener("click", function() {
     if (!measureControl) {
