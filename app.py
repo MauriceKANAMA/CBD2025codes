@@ -1,7 +1,9 @@
 from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import and_
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import to_shape
+from geoalchemy2.functions import ST_MakeEnvelope, ST_Transform
 from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_caching import Cache
@@ -37,10 +39,15 @@ class Inventaire(db.Model):
     Date = db.Column('time', db.String(254))
 
 def serialize_inventaire(obj):
-    point = to_shape(obj.geom)
+    if obj.geom:
+        point = to_shape(obj.geom)
+        coords = {'lat': point.y, 'lng': point.x}
+    else:
+        coords = None
+
     return {
         'id': obj.id,
-        'geom': {'lat': point.y, 'lng': point.x},
+        'geom': coords,
         'Nilots': obj.Nilots,
         'NomEtabliss': obj.NomEtabliss,
         'Categorie': obj.Categorie,
@@ -68,30 +75,58 @@ def get_inventaire(item_id):
 @cache.cached(timeout=300)
 @app.route('/api/inventaire/geojson', methods=['GET'])
 def get_geojson():
-    items = Inventaire.query.all()
-    features = []
-    for item in items:
-        point = to_shape(item.geom)
-        features.append({
-            "type": "Feature",
-            "geometry": {
-                "type": "Point",
-                "coordinates": [point.x, point.y]
-            },
-            "properties": {
-                "id": item.id,
-                "nom_etabli": item.NomEtabliss,
-                "categories": item.Categorie,
-                "sous_categ": item.Sous_categorie,
-                "types_rubr": item.Rubriques,
-                "descriptio": item.Description,
-                "adresses": item.Avenue
-            }
+    try:
+        categorie_filter = request.args.get('categorie')
+        bbox_param = request.args.get('bbox')  # format: minx,miny,maxx,maxy
+
+        query = Inventaire.query
+
+        if categorie_filter:
+            query = query.filter(Inventaire.Categorie.ilike(f"%{categorie_filter}%"))
+
+        if bbox_param:
+            try:
+                minx, miny, maxx, maxy = map(float, bbox_param.split(','))
+                bbox_geom = ST_MakeEnvelope(minx, miny, maxx, maxy, 4326)
+                query = query.filter(Inventaire.geom != None)
+                query = query.filter(Inventaire.geom.ST_Within(bbox_geom))
+            except ValueError:
+                return jsonify({"error": "Paramètre bbox mal formé. Utilise : bbox=minx,miny,maxx,maxy"}), 400
+
+        items = query.all()
+
+        features = []
+        for item in items:
+            if not item.geom:
+                continue
+
+            point = to_shape(item.geom)
+            features.append({
+                "type": "Feature",
+                "geometry": {
+                    "type": "Point",
+                    "coordinates": [point.x, point.y]
+                },
+                "properties": {
+                    "id": item.id,
+                    "nom_etabli": item.NomEtabliss,
+                    "categories": item.Categorie,
+                    "sous_categ": item.Sous_categorie,
+                    "types_rubr": item.Rubriques,
+                    "descriptio": item.Description,
+                    "adresses": item.Avenue
+                }
+            })
+
+        return jsonify({
+            "type": "FeatureCollection",
+            "features": features
         })
-    return jsonify({
-        "type": "FeatureCollection",
-        "features": features
-    })
+
+    except Exception as e:
+        print(f"[ERREUR API GEOJSON] {e}")
+        return jsonify({"error": "Erreur interne du serveur"}), 500
+
 
 # Route pour la page d'accueil
 @app.route('/')
