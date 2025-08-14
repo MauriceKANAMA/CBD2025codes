@@ -39,128 +39,154 @@ document.addEventListener("DOMContentLoaded", function () {
   let allFeatures = []; // Pour stocker toutes les entités initiales
   let markers = L.layerGroup(); // Cluster global
   let measureControl = null; // Pour le contrôle de mesure
-
-  // Déclaration des éléments DOM utilisés dans les fonctions
   let sousCategorieSelect = document.getElementById("sousCategorie");
 
-  // Ajout de la couche Inventaire sur base de notre methode GET API
+  // Création et insertion du spinner dans la page
+  const spinner = document.createElement("div");
+  spinner.id = "spinner";
+  spinner.style.position = "fixed";
+  spinner.style.top = "0";
+  spinner.style.left = "0";
+  spinner.style.width = "100%";
+  spinner.style.height = "100%";
+  spinner.style.background = "rgba(255,255,255,0)";
+  spinner.style.display = "flex";
+  spinner.style.justifyContent = "center";
+  spinner.style.alignItems = "center";
+  spinner.style.zIndex = "9999";
+  spinner.innerHTML = `<div class="loader"></div>`;
+  document.body.appendChild(spinner);
+
+  // Styles pour le loader (petit cercle animé)
+  const style = document.createElement("style");
+  style.innerHTML = `
+    .loader {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #3498db;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Fonctions utilitaires pour le spinner
+  function showSpinner() {
+    spinner.style.display = "flex";
+  }
+  function hideSpinner() {
+    spinner.style.display = "none";
+  }
+
+  // Afficher le spinner au début du chargement
+  showSpinner();
+
+  // Chargement des données depuis l’API
   fetch("/api/inventaire/geojson")
     .then(response => response.json())
     .then(data => {
       allFeatures = data.features;
-
       mettreAJourSousCategories("Hôtels - Restaurants - Cafés");
 
-      // Sélection automatique de la catégorie "Hôtels - Restaurants - Cafés"
+      // Sélection automatique de la catégorie par défaut
       document.getElementById("categorie").value = "Hôtels - Restaurants - Cafés";
-      afficherFeaturesFiltrées("Hôtels - Restaurants - Cafés"); // Affichage auto d'une catégorie pour reduire le temps de chargement
+      afficherFeaturesFiltrées("Hôtels - Restaurants - Cafés");
 
+      hideSpinner(); // Masquer une fois le chargement initial terminé
     })
-
     .catch(error => {
       console.error("Erreur lors du chargement de l'API Flask :", error);
-    })
-    
-    // Fonction pour le filtrage des entités pour la selection par categorie et recherche par nom
-    function afficherFeaturesFiltrées(categorieFiltre, termeRecherche = "", sousCategorieFiltre = "") {
-      // Remove existing layers
-      markers.clearLayers();
-      
-      // Remove existing glify layer if it exists
-      if (window.currentGlLayer) {
-        window.currentGlLayer.remove();
-        window.currentGlLayer = null;
-      }
+      hideSpinner();
+    });
 
-      let dataFiltrée = allFeatures;
+  // Fonction pour le filtrage des entités
+  function afficherFeaturesFiltrées(categorieFiltre, termeRecherche = "", sousCategorieFiltre = "") {
+    showSpinner(); // Affiche le spinner pendant le traitement
 
-      // Filtrage par catégorie
-      if (categorieFiltre && categorieFiltre !== "Choisissez une catégorie") {
-        dataFiltrée = dataFiltrée.filter(f => f.properties.categories === categorieFiltre);
-      }
+    markers.clearLayers();
 
-      // Filtrage par sous-catégorie
-      if (sousCategorieFiltre && sousCategorieFiltre !== "Choisissez une sous-catégorie") {
-        dataFiltrée = dataFiltrée.filter(f => f.properties.sous_categ === sousCategorieFiltre);
-      }
-
-      // Filtrage par nom, avenue, rubriques et descriptions
-      if (termeRecherche) {
-        const terme = termeRecherche.toLowerCase();
-        dataFiltrée = dataFiltrée.filter(f => {
-          const props = f.properties;
-          return (
-            (props.nom_etabli && props.nom_etabli.toLowerCase().includes(terme)) ||
-            (props.adresses && props.adresses.toLowerCase().includes(terme)) ||
-            (props.description && props.description.toLowerCase().includes(terme)) ||
-            (props.sous_categ && props.sous_categ.toLowerCase().includes(terme)) ||
-            (props.types_rubr && props.types_rubr.toLowerCase().includes(terme))
-          );
-        });
-      }
-
-      // Convert data to glify format
-      const glifyData = dataFiltrée.map(feature => {
-        return [feature.geometry.coordinates[1], feature.geometry.coordinates[0]]; // lat, lng
-      });
-
-      // Create new glify layer if we have data to display
-      if (glifyData.length > 0) {
-        window.currentGlLayer = L.glify.points({
-          data: glifyData,
-          map: map,
-          click: function (e, point, xy) {
-            // Handle click events for displaying popups
-            // Find the feature that corresponds to this point
-            const lat = point[0];
-            const lng = point[1];
-            
-            // Find the feature in dataFiltrée that matches this point
-            const feature = dataFiltrée.find(f =>
-              f.geometry.coordinates[1] === lat && f.geometry.coordinates[0] === lng
-            );
-            
-            if (feature) {
-              const props = feature.properties;
-              // Create popup content
-              const popupContent = `
-                <div class="custom-popup">
-                  <h3><i class="fas fa-store"></i> ${props.nom_etabli || "Inconnu"}</h3>
-                  <p><strong>Catégorie :</strong> ${props.categories || "Non définie"}</p>
-                  <p><strong>Sous-catégorie :</strong> ${props.sous_categ || "Non définie"}</p>
-                  <p><strong>Rubrique :</strong> ${props.types_rubr || "Non définie"}</p>
-                  <p><strong>Description :</strong> ${props.description || "Aucune description"}</p>
-                  <p><strong>Adresse :</strong> Avenue ${props.adresses || "Aucune adresse disponible"}</p>
-                </div>
-              `;
-              L.popup().setLatLng([lat, lng]).setContent(popupContent).openOn(map);
-            }
-          },
-          size: 13, // plus gros point
-          opacity: 1.0,
-          color: function(index, point) {
-            return {
-              r: 0,
-              g: 0,
-              b: 255,
-              a: 1 // pleine opacité
-            };
-          }
-        });
-      }
+    if (window.currentGlLayer) {
+      window.currentGlLayer.remove();
+      window.currentGlLayer = null;
     }
 
-  //Recherche selon les noms d etablisement et avenues
+    let dataFiltrée = allFeatures;
+
+    if (categorieFiltre && categorieFiltre !== "Choisissez une catégorie") {
+      dataFiltrée = dataFiltrée.filter(f => f.properties.categories === categorieFiltre);
+    }
+    if (sousCategorieFiltre && sousCategorieFiltre !== "Choisissez une sous-catégorie") {
+      dataFiltrée = dataFiltrée.filter(f => f.properties.sous_categ === sousCategorieFiltre);
+    }
+    if (termeRecherche) {
+      const terme = termeRecherche.toLowerCase();
+      dataFiltrée = dataFiltrée.filter(f => {
+        const props = f.properties;
+        return (
+          (props.nom_etabli && props.nom_etabli.toLowerCase().includes(terme)) ||
+          (props.adresses && props.adresses.toLowerCase().includes(terme)) ||
+          (props.description && props.description.toLowerCase().includes(terme)) ||
+          (props.sous_categ && props.sous_categ.toLowerCase().includes(terme)) ||
+          (props.types_rubr && props.types_rubr.toLowerCase().includes(terme))
+        );
+      });
+    }
+
+    const glifyData = dataFiltrée.map(feature => {
+      return [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+    });
+
+    if (glifyData.length > 0) {
+      window.currentGlLayer = L.glify.points({
+        data: glifyData,
+        map: map,
+        click: function (e, point, xy) {
+          const lat = point[0];
+          const lng = point[1];
+          const feature = dataFiltrée.find(f =>
+            f.geometry.coordinates[1] === lat && f.geometry.coordinates[0] === lng
+          );
+          if (feature) {
+            const props = feature.properties;
+            const popupContent = `
+              <div class="custom-popup">
+                <h3><i class="fas fa-store"></i> ${props.nom_etabli || "Inconnu"}</h3>
+                <p><strong>Catégorie :</strong> ${props.categories || "Non définie"}</p>
+                <p><strong>Sous-catégorie :</strong> ${props.sous_categ || "Non définie"}</p>
+                <p><strong>Rubrique :</strong> ${props.types_rubr || "Non définie"}</p>
+                <p><strong>Description :</strong> ${props.description || "Aucune description"}</p>
+                <p><strong>Adresse :</strong> Avenue ${props.adresses || "Aucune adresse disponible"}</p>
+              </div>
+            `;
+            L.popup().setLatLng([lat, lng]).setContent(popupContent).openOn(map);
+          }
+        },
+        size: 13,
+        opacity: 1.0,
+        color: function() {
+          return { r: 0, g: 0, b: 255, a: 1 };
+        }
+      });
+    }
+
+    hideSpinner(); // Masque le spinner après affichage
+  }
+
+  // Recherche selon les noms
   function mettreAJourListeResultats(termeRecherche, categorieFiltre) {
     const resultList = document.getElementById("searchResults");
-    resultList.innerHTML = ""; // vide la liste
+    resultList.innerHTML = "";
 
     let resultats = allFeatures;
 
     if (categorieFiltre && categorieFiltre !== "Choisissez une catégorie") {
       resultats = resultats.filter(f => f.properties.categories === categorieFiltre);
     }
-
     if (termeRecherche) {
       const terme = termeRecherche.toLowerCase();
       resultats = resultats.filter(f => {
@@ -174,15 +200,13 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
-    // Afficher les 10 premiers résultats max
     resultats.slice(0, 10).forEach(feature => {
       const li = document.createElement("li");
       li.textContent = `${feature.properties.nom_etabli || "Inconnu"} - ${feature.properties.adresses || "Inconnue"}`;
       li.addEventListener("click", () => {
         const coords = feature.geometry.coordinates;
         const latlng = L.latLng(coords[1], coords[0]);
-        map.setView(latlng, 18); // zoom sur le point
-        // Créer un marqueur temporaire (facultatif)
+        map.setView(latlng, 18);
         L.popup()
           .setLatLng(latlng)
           .setContent(`<strong>${feature.properties.nom_etabli}</strong>`)
@@ -191,7 +215,6 @@ document.addEventListener("DOMContentLoaded", function () {
       resultList.appendChild(li);
     });
 
-    // Si aucun résultat
     if (resultats.length === 0 && termeRecherche) {
       const li = document.createElement("li");
       li.textContent = "Aucun résultat trouvé.";
@@ -201,25 +224,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Ajout de la selection a partir des sous categories de la categorie principale
-
+  // Mise à jour sous-catégories
   function mettreAJourSousCategories(categorie) {
     const sousCategories = new Set();
-
-    // Extraire toutes les sous-catégories possibles de la catégorie sélectionnée
     allFeatures.forEach(feature => {
-      if (
-        (!categorie || feature.properties.categories === categorie) &&
-        feature.properties.sous_categ
-      ) {
+      if ((!categorie || feature.properties.categories === categorie) && feature.properties.sous_categ) {
         sousCategories.add(feature.properties.sous_categ.trim());
       }
     });
 
-    // Nettoyer le menu existant
     sousCategorieSelect.innerHTML = `<option value="">Choisissez une sous-catégorie</option>`;
-
-    // Ajouter chaque sous-catégorie comme option
     Array.from(sousCategories).sort().forEach(sc => {
       const option = document.createElement("option");
       option.value = sc;
@@ -228,31 +242,22 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  // Listeners
   sousCategorieSelect.addEventListener("change", function () {
     const selectedCategorie = document.getElementById("categorie").value;
     const termeRecherche = document.getElementById("search").value;
     const sousCategorieFiltre = this.value;
-
     afficherFeaturesFiltrées(selectedCategorie, termeRecherche, sousCategorieFiltre);
   });
 
-
-  // EVENEMENTS POUR LA RECHERCHE ET LE FILTRAGE
-  // Utilisation du select HTML pour la recherche par catégorie
   document.getElementById("categorie").addEventListener("change", function () {
     const selectedCategorie = this.value;
     const termeRecherche = document.getElementById("search").value;
-
-    // Mettre à jour la liste des sous-catégories
     mettreAJourSousCategories(selectedCategorie);
-
     const sousCategorieFiltre = sousCategorieSelect.value;
     afficherFeaturesFiltrées(selectedCategorie, termeRecherche, sousCategorieFiltre);
   });
 
-
-
-  // Utilisation du boutton HTML pour la recherche
   document.getElementById("search").addEventListener("input", function () {
     const termeRecherche = this.value;
     const selectedCategorie = document.getElementById("categorie").value;
@@ -260,24 +265,16 @@ document.addEventListener("DOMContentLoaded", function () {
     mettreAJourListeResultats(termeRecherche, selectedCategorie);
   });
 
-  // Utilisation du bouton HTML pour réinitialiser les filtres
   document.getElementById("resetFilters").addEventListener("click", function () {
-    // Réinitialise les champs
     document.getElementById("categorie").value = "";
     document.getElementById("search").value = "";
     document.getElementById("sousCategorie").value = "";
-
-    // Recharge toutes les entités
     afficherFeaturesFiltrées("", "");
-
     document.getElementById("searchResults").innerHTML = "";
-
-    // Recentrer à la position initiale
     map.setView(positionInitiale.coords, positionInitiale.zoom);
-
-    // Mise a jour de la sous categorie
     mettreAJourSousCategories("");
   });
+
 
 
 
