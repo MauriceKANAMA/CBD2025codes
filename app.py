@@ -7,6 +7,7 @@ from geoalchemy2.functions import ST_MakeEnvelope, ST_Transform
 from dotenv import load_dotenv
 from flask_cors import CORS
 from flask_caching import Cache
+import json
 import os
 
 load_dotenv()
@@ -134,12 +135,197 @@ def get_geojson():
         print(f"[ERREUR API GEOJSON] {e}")
         return jsonify({"error": "Erreur interne du serveur"}), 500
     
-# API pour les statistiques des donnees
-@app.route('/api/inventaire/stats', methods=['GET'])
-def get_stats():
-    results = db.session.query(Inventaire.Categorie, func.count(Inventaire.id)).group_by(Inventaire.Categorie).all()
-    stats = [{"categorie": row[0], "count": row[1]} for row in results]
-    return jsonify(stats)
+# LES AUTRES COUCHES
+
+class BuildingsCBD(db.Model):
+    __tablename__ = 'BuildingsCBD'
+    id = db.Column(db.Integer, primary_key=True)
+    geom = db.Column(Geometry('POINT', srid=4326))
+    fid = db.Column(db.String)
+    date = db.Column(db.String)
+    height = db.Column(db.String)
+    stage = db.Column(db.String)
+    name = db.Column(db.String)
+    type = db.Column(db.String)
+    blocnum = db.Column(db.String)
+    surfbatis = db.Column(db.String)
+    stageusecb = db.Column(db.String)
+
+class Limites2025(db.Model):
+    __tablename__ = 'Limites2025'
+    id = db.Column(db.Integer, primary_key=True)
+    geom = db.Column(Geometry('POLYGON', srid=4326))
+    fid = db.Column(db.String)
+    annee = db.Column(db.String)
+    auteur = db.Column(db.String)
+    surface = db.Column(db.String)
+
+class BlocsCBD(db.Model):
+    __tablename__ = 'BlocsCBD'
+    id = db.Column(db.Integer, primary_key=True)
+    geom = db.Column(Geometry('POLYGON', srid=4326))
+    fid = db.Column(db.String)
+    blocsurfac = db.Column(db.String)
+
+
+def serialize_building(obj):
+    point = to_shape(obj.geom) if obj.geom else None
+    coords = {'lat': point.y, 'lng': point.x} if point else None
+    return {
+        'id': obj.id,
+        'geom': coords,
+        'fid': obj.fid,
+        'date': obj.date,
+        'height': obj.height,
+        'stage': obj.stage,
+        'name': obj.name,
+        'type': obj.type,
+        'blocnum': obj.blocnum,
+        'surfbatis': obj.surfbatis,
+        'stageusecb': obj.stageusecb
+    }
+
+def serialize_limite(obj):
+    polygon = to_shape(obj.geom) if obj.geom else None
+    coords = list(polygon.exterior.coords) if polygon else None
+    return {
+        'id': obj.id,
+        'geom': coords,
+        'fid': obj.fid,
+        'annee': obj.annee,
+        'auteur': obj.auteur,
+        'surface': obj.surface
+    }
+
+def serialize_bloc(obj):
+    polygon = to_shape(obj.geom) if obj.geom else None
+    coords = list(polygon.exterior.coords) if polygon else None
+    return {
+        'id': obj.id,
+        'geom': coords,
+        'fid': obj.fid,
+        'blocsurfac': obj.blocsurfac
+    }
+
+# # ---- BuildingsCBD GeoJSON ----
+# @app.route('/api/geojson/BuildingsCBD', methods=['GET'])
+# def get_buildings_geojson():
+#     try:
+#         query = db.session.query(
+#             BuildingsCBD.id,
+#             BuildingsCBD.fid,
+#             BuildingsCBD.date,
+#             BuildingsCBD.height,
+#             BuildingsCBD.stage,
+#             BuildingsCBD.name,
+#             BuildingsCBD.type,
+#             BuildingsCBD.blocnum,
+#             BuildingsCBD.surfbatis,
+#             BuildingsCBD.stageusecb,
+#             func.ST_AsGeoJSON(BuildingsCBD.geom).label('geom_json')
+#         ).filter(BuildingsCBD.geom != None)
+
+#         items = query.all()
+
+#         features = []
+#         for item in items:
+#             features.append({
+#                 "type": "Feature",
+#                 "geometry": json.loads(item.geom_json),
+#                 "properties": {
+#                     "id": item.id,
+#                     "fid": item.fid,
+#                     "date": item.date,
+#                     "height": item.height,
+#                     "stage": item.stage,
+#                     "name": item.name,
+#                     "type": item.type,
+#                     "blocnum": item.blocnum,
+#                     "surfbatis": item.surfbatis,
+#                     "stageusecb": item.stageusecb
+#                 }
+#             })
+
+#         return jsonify({
+#             "type": "FeatureCollection",
+#             "features": features
+#         })
+#     except Exception as e:
+#         print(f"[ERREUR API GEOJSON BuildingsCBD] {e}")
+#         return jsonify({"error": "Erreur interne du serveur"}), 500
+
+
+# ---- BlocsCBD GeoJSON ----
+@app.route('/api/geojson/BlocsCBD', methods=['GET'])
+def get_blocs_geojson():
+    try:
+        query = db.session.query(
+            BlocsCBD.id,
+            BlocsCBD.fid,
+            BlocsCBD.blocsurfac,
+            func.ST_AsGeoJSON(BlocsCBD.geom).label('geom_json')
+        ).filter(BlocsCBD.geom != None)
+
+        items = query.all()
+
+        features = []
+        for item in items:
+            features.append({
+                "type": "Feature",
+                "geometry": json.loads(item.geom_json),
+                "properties": {
+                    "id": item.id,
+                    "fid": item.fid,
+                    "blocsurfac": item.blocsurfac
+                }
+            })
+
+        return jsonify({
+            "type": "FeatureCollection",
+            "features": features
+        })
+    except Exception as e:
+        print(f"[ERREUR API GEOJSON BlocsCBD] {e}")
+        return jsonify({"error": "Erreur interne du serveur"}), 500
+
+
+# ---- Limites2025 GeoJSON ----
+@app.route('/api/geojson/Limites2025', methods=['GET'])
+def get_limites_geojson():
+    try:
+        query = db.session.query(
+            Limites2025.id,
+            Limites2025.fid,
+            Limites2025.annee,
+            Limites2025.auteur,
+            Limites2025.surface,
+            func.ST_AsGeoJSON(Limites2025.geom).label('geom_json')
+        ).filter(Limites2025.geom != None)
+
+        items = query.all()
+
+        features = []
+        for item in items:
+            features.append({
+                "type": "Feature",
+                "geometry": json.loads(item.geom_json),
+                "properties": {
+                    "id": item.id,
+                    "fid": item.fid,
+                    "annee": item.annee,
+                    "auteur": item.auteur,
+                    "surface": item.surface
+                }
+            })
+
+        return jsonify({
+            "type": "FeatureCollection",
+            "features": features
+        })
+    except Exception as e:
+        print(f"[ERREUR API GEOJSON Limites2025] {e}")
+        return jsonify({"error": "Erreur interne du serveur"}), 500
+
 
 
 

@@ -13,21 +13,107 @@ document.addEventListener("DOMContentLoaded", function () {
   toggleButton.addEventListener('click', () => sidebar.classList.toggle('hidden'));
 
   const Carto_Light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OSM & Carto &copy;2025', maxZoom: 22
+    attribution: '&copy; OSM & Carto 2025', maxZoom: 22
   }).addTo(map);
   const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png?{foo}', {
-    foo: 'bar', attribution: '&copy; OpenStreetMap &copy;2025', maxZoom: 22
+    foo: 'bar', attribution: '&copy; OpenStreetMap 2025', maxZoom: 22
   });
   const Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: '&copy; Esri &copy;2025', maxZoom: 22
+    attribution: '&copy; Esri 2025', maxZoom: 22
   });
 
-  const overlays = {
-    "Bâtiments": L.tileLayer.wms("...BuildingsCBD"),
-    "Blocs": L.tileLayer.wms("...BlocsCBD"),
-    "Limites": L.tileLayer.wms("...Limites2025")
+
+  // LES AUTRES COUCHES
+
+
+  let couchesGroup = L.layerGroup().addTo(map);
+
+  // Légende (au départ affichée)
+  const legend = L.control({ position: "bottomright" });
+  legend.onAdd = function () {
+    const div = L.DomUtil.create("div", "info legend");
+    div.style.backgroundColor = "white";
+    div.style.padding = "8px";
+    div.style.fontSize = "14px";
+    div.style.lineHeight = "18px";
+    div.style.boxShadow = "0 0 5px rgba(0,0,0,0.3)";
+    div.innerHTML = `
+      <strong>Légende</strong><br>
+      <span style="display:inline-block;width:20px;height:0;
+            border-top:3px solid green;
+            margin-right:4px;vertical-align:middle;"></span> Limites du C.B.D<br>
+
+      
+    `;
+    // <span style="display:inline-block;width:20px;height:5px;
+    //         border-radius: 15px;
+    //         border:2px solid;
+    //         margin-right:4px;vertical-align:middle;"></span> Blocs du C.B.D<br>
+
+    // <span style="display:inline-block;width:20px;height:5px;
+      //       border-radius: 15px;
+      //       border:2px solid;
+      //       margin-right:4px;vertical-align:middle;"></span> Bâtiments du C.B.D<br>
+
+    return div;
   };
-  L.control.layers(null, overlays, { collapsed: true, position: 'bottomright' }).addTo(map);
+
+  // Fonction pour charger les couches
+  function loadCouches() {
+    // fetch("/api/geojson/BuildingsCBD")
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     L.geoJSON(data, { style: { color: "red" } }).addTo(couchesGroup);
+    //   });
+
+    // fetch("/api/geojson/BlocsCBD")
+    //   .then(res => res.json())
+    //   .then(data => {
+    //     L.geoJSON(data, { style: { color: "black", weight: 2, fillColor: "blue", fillOpacity: 0 } }).addTo(couchesGroup);
+    //   });
+
+    fetch("/api/geojson/Limites2025")
+      .then(res => res.json())
+      .then(data => {
+        L.geoJSON(data, { style: { color: "green", weight: 3, fillColor: "green", fillOpacity: 0 } }).addTo(couchesGroup);
+      });
+  }
+
+  loadCouches();
+
+  // Bouton toggle couches + légende
+  const toggleControl = L.control({ position: "bottomright" });
+  toggleControl.onAdd = function () {
+    const div = L.DomUtil.create("div", "leaflet-bar leaflet-control leaflet-control-custom");
+    div.style.backgroundColor = "white";
+    div.style.padding = "5px";
+    div.style.cursor = "pointer";
+    div.style.fontSize = "13px";
+    div.innerHTML = "🗺️ Légende";
+
+    let visible = false;
+
+    div.onclick = function () {
+      if (visible) {
+        map.removeLayer(couchesGroup);
+        map.removeControl(legend);
+        visible = false;
+      } else {
+        map.addLayer(couchesGroup);
+        legend.addTo(map);
+        visible = true;
+      }
+    };
+
+    return div;
+  };
+  toggleControl.addTo(map);
+
+
+
+
+
+  // FIN DES AUTRES COUCHES
 
 
   // AJOUT DES COUCHES VECTORIELLES
