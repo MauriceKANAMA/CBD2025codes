@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fetch("/api/geojson/Limites2025")
       .then(res => res.json())
       .then(data => {
-        L.geoJSON(data, { style: { color: "green", weight: 3, fillColor: "green", fillOpacity: 0 } }).addTo(couchesGroup);
+        L.geoJSON(data, { style: { color: "green", weight: 3, fillColor: "green", fillOpacity: 0 }, interactive: false  }).addTo(couchesGroup);
       });
   }
 
@@ -122,186 +122,217 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 
-  let allFeatures = []; // Pour stocker toutes les entités initiales
-  let markers = L.layerGroup(); // Cluster global
-  let measureControl = null; // Pour le contrôle de mesure
+  let deckLayer = null;
+  let allFeatures = [];
   let sousCategorieSelect = document.getElementById("sousCategorie");
 
-  // Création et insertion du spinner dans la page
-  const spinner = document.createElement("div");
-  spinner.id = "spinner";
-  spinner.style.position = "fixed";
-  spinner.style.top = "0";
-  spinner.style.left = "0";
-  spinner.style.width = "100%";
-  spinner.style.height = "100%";
-  spinner.style.background = "rgba(255,255,255,0)";
-  spinner.style.display = "flex";
-  spinner.style.justifyContent = "center";
-  spinner.style.alignItems = "center";
-  spinner.style.zIndex = "9999";
-  spinner.innerHTML = `<div class="loader"></div>`;
-  document.body.appendChild(spinner);
-
-  // Styles pour le loader (petit cercle animé)
-  const style = document.createElement("style");
-  style.innerHTML = `
-    .loader {
-      border: 8px solid #f3f3f3;
-      border-top: 8px solid #3498db;
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  `;
-  document.head.appendChild(style);
-
-  // Fonctions utilitaires pour le spinner
-  function showSpinner() {
+  // Spinner dynamique dans le DOM
+  (function createSpinner() {
+    const spinner = document.createElement("div");
+    spinner.id = "spinner";
+    spinner.style.position = "fixed";
+    spinner.style.top = "0";
+    spinner.style.left = "0";
+    spinner.style.width = "100%";
+    spinner.style.height = "100%";
+    spinner.style.background = "rgba(255,255,255,0)";
     spinner.style.display = "flex";
+    spinner.style.justifyContent = "center";
+    spinner.style.alignItems = "center";
+    spinner.style.zIndex = "9999";
+    spinner.innerHTML = `<div class="loader"></div>`;
+    document.body.appendChild(spinner);
+
+    const style = document.createElement("style");
+    style.innerHTML = `
+      .loader {
+        border: 8px solid #f3f3f3;
+        border-top: 8px solid #3498db;
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+  })();
+
+  function showSpinner() {
+    document.getElementById("spinner").style.display = "flex";
   }
   function hideSpinner() {
-    spinner.style.display = "none";
+    document.getElementById("spinner").style.display = "none";
   }
 
-  // Afficher le spinner au début du chargement
-  showSpinner();
+  // Construction des données deck.gl avec couleurs par catégorie
+  function makeDeckData(features) {
+    const colorMap = {
+      "Alimentation": [52, 152, 219],
+      "Equipements": [46, 204, 113],
+      "Habillement": [241, 196, 50],
+      "Hôtels - Restaurants - Cafés": [231, 76, 60],
+      "Loisirs - Luxe - Culture": [155, 89, 182],
+      "Services": [21, 10, 15]
+    };
 
-  // Chargement des données depuis l’API
+    return features.map(f => {
+      const coords = f.geometry.coordinates;
+      const cat = f.properties.categories;
+      const color = colorMap[cat] || [127, 140, 141]; // gris par défaut
+      return {
+        position: [coords[0], coords[1]],
+        color,
+        properties: f.properties
+      };
+    });
+  }
+
+  // Création de la couche deck.gl
+  function updateDeckLayer(data) {
+    if (deckLayer) {
+      map.removeLayer(deckLayer);
+      deckLayer = null;
+    }
+    const deckData = makeDeckData(data);
+    const iconLayer = new deck.IconLayer({
+      id: 'deckgl-icon-markers',
+      data: deckData,
+      pickable: true,
+      getPosition: d => d.position,
+      getIcon: d => ({
+        url: 'https://cdn-icons-png.flaticon.com/512/252/252025.png',
+        width: 128,
+        height: 128,
+        anchorY: 128  // l’icône pointe vers le bas
+      }),
+      getSize: 32,          // taille logique
+      sizeScale: 1,         // échelle globale
+      onClick: info => {
+        const object = info.object;
+        if (!object || !object.position || !map) {
+          console.warn("Pas de données suffisantes pour afficher le popup");
+          return;
+        }
+
+        const { position, properties } = object;
+
+        const popupContent = `
+          <div class="custom-popup">
+            <h3><i class="fas fa-store"></i> ${properties.nom_etabli || "Inconnu"}</h3>
+            <p><strong>Catégorie :</strong> ${properties.categories || "Non définie"}</p>
+            <p><strong>Sous-catégorie :</strong> ${properties.sous_categ || "Non définie"}</p>
+            <p><strong>Rubrique :</strong> ${properties.types_rubr || "Non définie"}</p>
+            <p><strong>Description :</strong> ${properties.description || "Aucune description"}</p>
+            <p><strong>Adresse :</strong> Avenue ${properties.adresses || "Aucune adresse disponible"}</p>
+          </div>
+        `;
+
+        L.popup()
+          .setLatLng([position[1], position[0]]) // Leaflet = [lat, lng]
+          .setContent(popupContent)
+          .openOn(map);
+      }
+    });
+
+    deckLayer = new DeckGlLeaflet.LeafletLayer({ layers: [iconLayer] });
+    map.addLayer(deckLayer);
+  }
+
+  const iconLayer = new deck.IconLayer({
+    id: 'scatter-test',
+    data: [
+      { position: [2.35, 48.85], color: [255, 0, 0], properties: { nom: "Test" } }
+    ],
+    pickable: true,
+    getPosition: d => d.position,
+    getFillColor: d => d.color,
+    getRadius: 30,
+    onClick: info => {
+      console.log("CLICK SUR TEST POINT", info);
+    }
+  });
+
+  deckLayer = new DeckGlLeaflet.LeafletLayer({ layers: [iconLayer] });
+  map.addLayer(deckLayer);
+
+  // Chargement initial
+  showSpinner();
   fetch("/api/inventaire/geojson")
     .then(response => response.json())
     .then(data => {
       allFeatures = data.features;
       mettreAJourSousCategories("Hôtels - Restaurants - Cafés");
-
-      // Sélection automatique de la catégorie par défaut
       document.getElementById("categorie").value = "Hôtels - Restaurants - Cafés";
       afficherFeaturesFiltrées("Hôtels - Restaurants - Cafés");
-
-      hideSpinner(); // Masquer une fois le chargement initial terminé
+      hideSpinner();
     })
     .catch(error => {
-      console.error("Erreur lors du chargement de l'API Flask :", error);
+      console.error("Erreur API:", error);
       hideSpinner();
     });
 
-  // Fonction pour le filtrage des entités
-  function afficherFeaturesFiltrées(categorieFiltre, termeRecherche = "", sousCategorieFiltre = "") {
-    showSpinner(); // Affiche le spinner pendant le traitement
+  // Filtrage + affichage
+  function afficherFeaturesFiltrées(categorie, terme = "", sousCategorie = "") {
+    showSpinner();
+    let filtered = allFeatures;
 
-    markers.clearLayers();
-
-    if (window.currentGlLayer) {
-      window.currentGlLayer.remove();
-      window.currentGlLayer = null;
-    }
-
-    let dataFiltrée = allFeatures;
-
-    if (categorieFiltre && categorieFiltre !== "Choisissez une catégorie") {
-      dataFiltrée = dataFiltrée.filter(f => f.properties.categories === categorieFiltre);
-    }
-    if (sousCategorieFiltre && sousCategorieFiltre !== "Choisissez une sous-catégorie") {
-      dataFiltrée = dataFiltrée.filter(f => f.properties.sous_categ === sousCategorieFiltre);
-    }
-    if (termeRecherche) {
-      const terme = termeRecherche.toLowerCase();
-      dataFiltrée = dataFiltrée.filter(f => {
-        const props = f.properties;
-        return (
-          (props.nom_etabli && props.nom_etabli.toLowerCase().includes(terme)) ||
-          (props.adresses && props.adresses.toLowerCase().includes(terme)) ||
-          (props.description && props.description.toLowerCase().includes(terme)) ||
-          (props.sous_categ && props.sous_categ.toLowerCase().includes(terme)) ||
-          (props.types_rubr && props.types_rubr.toLowerCase().includes(terme))
-        );
+    if (categorie && categorie !== "Choisissez une catégorie")
+      filtered = filtered.filter(f => f.properties.categories === categorie);
+    if (sousCategorie && sousCategorie !== "Choisissez une sous-catégorie")
+      filtered = filtered.filter(f => f.properties.sous_categ === sousCategorie);
+    if (terme) {
+      const t = terme.toLowerCase();
+      filtered = filtered.filter(f => {
+        const p = f.properties;
+        return (p.nom_etabli?.toLowerCase().includes(t) ||
+                p.adresses?.toLowerCase().includes(t) ||
+                p.description?.toLowerCase().includes(t) ||
+                p.types_rubr?.toLowerCase().includes(t));
       });
     }
 
-    const glifyData = dataFiltrée.map(feature => {
-      return [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
-    });
-
-    if (glifyData.length > 0) {
-      window.currentGlLayer = L.glify.points({
-        data: glifyData,
-        map: map,
-        click: function (e, point, xy) {
-          const lat = point[0];
-          const lng = point[1];
-          const feature = dataFiltrée.find(f =>
-            f.geometry.coordinates[1] === lat && f.geometry.coordinates[0] === lng
-          );
-          if (feature) {
-            const props = feature.properties;
-            const popupContent = `
-              <div class="custom-popup">
-                <h3><i class="fas fa-store"></i> ${props.nom_etabli || "Inconnu"}</h3>
-                <p><strong>Catégorie :</strong> ${props.categories || "Non définie"}</p>
-                <p><strong>Sous-catégorie :</strong> ${props.sous_categ || "Non définie"}</p>
-                <p><strong>Rubrique :</strong> ${props.types_rubr || "Non définie"}</p>
-                <p><strong>Description :</strong> ${props.description || "Aucune description"}</p>
-                <p><strong>Adresse :</strong> Avenue ${props.adresses || "Aucune adresse disponible"}</p>
-              </div>
-            `;
-            L.popup().setLatLng([lat, lng]).setContent(popupContent).openOn(map);
-          }
-        },
-        size: 13,
-        opacity: 1.0,
-        color: function() {
-          return { r: 0, g: 0, b: 255, a: 1 };
-        }
-      });
-    }
-
-    hideSpinner(); // Masque le spinner après affichage
+    updateDeckLayer(filtered);
+    hideSpinner();
   }
 
-  // Recherche selon les noms
-  function mettreAJourListeResultats(termeRecherche, categorieFiltre) {
+  // Liste des résultats sous la barre de recherche
+  function mettreAJourListeResultats(terme, categorie) {
     const resultList = document.getElementById("searchResults");
     resultList.innerHTML = "";
 
-    let resultats = allFeatures;
-
-    if (categorieFiltre && categorieFiltre !== "Choisissez une catégorie") {
-      resultats = resultats.filter(f => f.properties.categories === categorieFiltre);
-    }
-    if (termeRecherche) {
-      const terme = termeRecherche.toLowerCase();
-      resultats = resultats.filter(f => {
-        const props = f.properties;
-        return (
-          (props.nom_etabli && props.nom_etabli.toLowerCase().includes(terme)) ||
-          (props.adresses && props.adresses.toLowerCase().includes(terme)) ||
-          (props.description && props.description.toLowerCase().includes(terme)) ||
-          (props.types_rubr && props.types_rubr.toLowerCase().includes(terme))
-        );
+    let results = allFeatures;
+    if (categorie && categorie !== "Choisissez une catégorie")
+      results = results.filter(f => f.properties.categories === categorie);
+    if (terme) {
+      const t = terme.toLowerCase();
+      results = results.filter(f => {
+        const p = f.properties;
+        return (p.nom_etabli?.toLowerCase().includes(t) ||
+                p.adresses?.toLowerCase().includes(t) ||
+                p.description?.toLowerCase().includes(t) ||
+                p.types_rubr?.toLowerCase().includes(t));
       });
     }
 
-    resultats.slice(0, 10).forEach(feature => {
+    results.slice(0, 10).forEach(feature => {
       const li = document.createElement("li");
       li.textContent = `${feature.properties.nom_etabli || "Inconnu"} - ${feature.properties.adresses || "Inconnue"}`;
       li.addEventListener("click", () => {
         const coords = feature.geometry.coordinates;
-        const latlng = L.latLng(coords[1], coords[0]);
-        map.setView(latlng, 18);
+        map.setView([coords[1], coords[0]], 18);
         L.popup()
-          .setLatLng(latlng)
+          .setLatLng([coords[1], coords[0]])
           .setContent(`<strong>${feature.properties.nom_etabli}</strong>`)
           .openOn(map);
       });
       resultList.appendChild(li);
     });
 
-    if (resultats.length === 0 && termeRecherche) {
+    if (results.length === 0 && terme) {
       const li = document.createElement("li");
       li.textContent = "Aucun résultat trouvé.";
       li.style.fontStyle = "italic";
@@ -310,12 +341,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Mise à jour sous-catégories
+  // Mise à jour des sous-catégories dynamiquement
   function mettreAJourSousCategories(categorie) {
     const sousCategories = new Set();
-    allFeatures.forEach(feature => {
-      if ((!categorie || feature.properties.categories === categorie) && feature.properties.sous_categ) {
-        sousCategories.add(feature.properties.sous_categ.trim());
+    allFeatures.forEach(f => {
+      if ((!categorie || f.properties.categories === categorie) && f.properties.sous_categ) {
+        sousCategories.add(f.properties.sous_categ.trim());
       }
     });
 
@@ -329,37 +360,42 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // Listeners
-  sousCategorieSelect.addEventListener("change", function () {
-    const selectedCategorie = document.getElementById("categorie").value;
-    const termeRecherche = document.getElementById("search").value;
-    const sousCategorieFiltre = this.value;
-    afficherFeaturesFiltrées(selectedCategorie, termeRecherche, sousCategorieFiltre);
+  sousCategorieSelect.addEventListener("change", () => {
+    const cat = document.getElementById("categorie").value;
+    const search = document.getElementById("search").value;
+    afficherFeaturesFiltrées(cat, search, sousCategorieSelect.value);
   });
 
   document.getElementById("categorie").addEventListener("change", function () {
-    const selectedCategorie = this.value;
-    const termeRecherche = document.getElementById("search").value;
-    mettreAJourSousCategories(selectedCategorie);
-    const sousCategorieFiltre = sousCategorieSelect.value;
-    afficherFeaturesFiltrées(selectedCategorie, termeRecherche, sousCategorieFiltre);
+    const cat = this.value;
+    const search = document.getElementById("search").value;
+    mettreAJourSousCategories(cat);
+    afficherFeaturesFiltrées(cat, search, sousCategorieSelect.value);
   });
 
   document.getElementById("search").addEventListener("input", function () {
-    const termeRecherche = this.value;
-    const selectedCategorie = document.getElementById("categorie").value;
-    afficherFeaturesFiltrées(selectedCategorie, termeRecherche);
-    mettreAJourListeResultats(termeRecherche, selectedCategorie);
+    const search = this.value;
+    const cat = document.getElementById("categorie").value;
+    afficherFeaturesFiltrées(cat, search);
+    mettreAJourListeResultats(search, cat);
   });
 
   document.getElementById("resetFilters").addEventListener("click", function () {
     document.getElementById("categorie").value = "";
     document.getElementById("search").value = "";
-    document.getElementById("sousCategorie").value = "";
+    sousCategorieSelect.value = "";
     afficherFeaturesFiltrées("", "");
     document.getElementById("searchResults").innerHTML = "";
-    map.setView(positionInitiale.coords, positionInitiale.zoom);
     mettreAJourSousCategories("");
+    map.setView(positionInitiale.coords, positionInitiale.zoom);
   });
+
+  document.querySelector("canvas").addEventListener("click", () => {
+    console.log("Canvas cliqué !");
+  });
+
+
+
 
 
 

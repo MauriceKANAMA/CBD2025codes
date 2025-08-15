@@ -4,6 +4,17 @@ body, html {
   font-family: Arial, sans-serif;
 }
 
+.deckgl-overlay {
+  pointer-events: auto !important;
+  z-index: 9999 !important;
+}
+
+.custom-popup-deck {
+  font-family: sans-serif;
+  max-width: 280px;
+}
+
+
 #map {
   height: 100%;
   min-height: 400px;
