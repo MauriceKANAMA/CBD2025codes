@@ -394,6 +394,61 @@ document.addEventListener("DOMContentLoaded", function () {
     console.log("Canvas cliqué !");
   });
 
+  // --- Mesure de distance adaptée à deck.gl ---
+  let measureControl = null;
+  let currentMeasureLayer = null;
+
+  document.getElementById("measureDistanceBtn").addEventListener("click", function() {
+    if (!measureControl) {
+      measureControl = new L.Draw.Polyline(map, {
+        shapeOptions: {
+          color: 'red',
+          weight: 4
+        }
+      });
+    }
+    measureControl.enable();
+  });
+
+  map.on(L.Draw.Event.CREATED, function (e) {
+    if (e.layerType === 'polyline') {
+      if (currentMeasureLayer) {
+        map.removeLayer(currentMeasureLayer); // supprime l'ancienne mesure
+      }
+
+      currentMeasureLayer = e.layer;
+      map.addLayer(currentMeasureLayer);
+
+      const latlngs = currentMeasureLayer.getLatLngs();
+      let totalDistance = 0;
+      for (let i = 0; i < latlngs.length - 1; i++) {
+        totalDistance += latlngs[i].distanceTo(latlngs[i + 1]);
+      }
+
+      const distanceText = totalDistance >= 1000
+        ? (totalDistance / 1000).toFixed(2) + " km"
+        : Math.round(totalDistance) + " m";
+
+      document.getElementById("distanceText").textContent = `Distance : ${distanceText}`;
+
+      // Affiche la modale
+      document.getElementById("measureModal").classList.remove("hidden");
+    }
+  });
+
+  document.getElementById("deleteMeasureBtn").onclick = function () {
+    if (currentMeasureLayer) {
+      map.removeLayer(currentMeasureLayer);
+      currentMeasureLayer = null;
+    }
+    document.getElementById("measureModal").classList.add("hidden");
+  };
+
+  document.getElementById("closeMeasureBtn").onclick = function () {
+    document.getElementById("measureModal").classList.add("hidden");
+  };
+
+
 
 
 
@@ -571,7 +626,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const deleteMeasureBtn = document.getElementById("deleteMeasureBtn");
   const closeMeasureBtn = document.getElementById("closeMeasureBtn");
 
-  let currentMeasureLayer = null;
+  
 
   map.on(L.Draw.Event.CREATED, function (e) {
     if (e.layerType === 'polyline') {
