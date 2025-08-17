@@ -1,0 +1,14 @@
+name: Redeploy Every 30 Minutes
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'  # Toutes les 30 minutes
+  workflow_dispatch:        # Permet de déclencher manuellement
+
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger redeploy
+        run: echo "Redeployment triggered at $(date)"
