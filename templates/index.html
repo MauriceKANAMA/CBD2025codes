@@ -112,6 +112,7 @@
         <!-- Ma position -->
         <button id="locateBtn" class="btn-inactive" title="Activer ma position" aria-label="Activer ma position">📡</button>
 
+        
       </div>
     </section>
 
@@ -140,26 +141,27 @@
           </div>
         </div>
       </div>
+
+
     </section>
 
     
   
-  <!-- Leaflet -->
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <!-- Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
-<!-- deck.gl en premier -->
-<script src="https://unpkg.com/deck.gl@9.0.29/dist.min.js"></script>
+    <!-- deck.gl en premier -->
+    <script src="https://unpkg.com/deck.gl@9.0.29/dist.min.js"></script>
 
-<!-- deck.gl-leaflet ensuite -->
-<script src="https://cdn.jsdelivr.net/npm/deck.gl-leaflet@1.3.1/dist/deck.gl-leaflet.umd.min.js"></script>
+    <!-- deck.gl-leaflet ensuite -->
+    <script src="https://cdn.jsdelivr.net/npm/deck.gl-leaflet@1.3.1/dist/deck.gl-leaflet.umd.min.js"></script>
 
-<!-- Autres plugins -->
-<script src="https://unpkg.com/leaflet.glify@3.2.0/dist/glify-browser.js"></script>
-<script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script>
-<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <!-- Autres plugins -->
+    <script src="https://unpkg.com/leaflet.vectorgrid@latest/dist/Leaflet.VectorGrid.bundled.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 
-<!-- Votre script -->
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- Votre script -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
   </body>
 </html>
